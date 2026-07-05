@@ -38,6 +38,8 @@ python minor_revision_study.py
 python validate_outputs.py
 ```
 
+**Note on Python version:** The original outputs were generated with Python 3.13.5 (see `environment_versions.txt`). All deterministic results (Pauli counts, densities, Gershgorin ratios, analytic shot requirements) reproduce exactly on any Python 3.10+ with the pinned dependencies. However, Monte Carlo results (finite-shot frequency RMSE, damage localization accuracy) may differ by ~5–10% on other Python versions because `scipy.optimize.minimize` (L-BFGS-B) floating-point behavior is not identical across interpreters, which shifts the random number consumption order. The `validate_outputs.py` script checks tight tolerances calibrated to the original Python 3.13.5 run and may fail on stochastic checks if run under a different version. The scientific conclusions are unaffected.
+
 ## Submission status
 
 Reviewer-response files and historical review reports have been removed. This folder contains only the manuscript, journal support files, reproducibility code, figures, data, and submission notes.
