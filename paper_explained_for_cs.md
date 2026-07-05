@@ -443,16 +443,22 @@ yᵢᵀyⱼ = (Lᵀφᵢ)ᵀ(Lᵀφⱼ) = φᵢᵀLLᵀφⱼ = φᵢᵀMφⱼ
 
 The number of nonzero Pauli terms in the decomposition of A directly determines the measurement cost. Each Pauli term (or group of commuting terms) requires separate quantum circuit executions.
 
-**The fundamental trade-off (the "trilemma"):**
+**The fundamental trade-off:**
+
+The paper frames this as a "three-way" problem (Eq. trilemma), but it's really a direct two-way trade-off:
+
+> **A more physically accurate mass matrix costs more to measure on a quantum computer.**
+
+Sparsity of A is not an independent design variable — it's the deterministic *consequence* of your choice of M:
 
 ```
-Physical accuracy of M  ←→  Sparsity of A  ←→  Measurement cost
+Choice of M  →  determines L  →  determines A = L⁻¹KL⁻ᵀ  →  determines Pauli count  →  determines measurement cost
 ```
 
 - Lumped mass (diagonal M): Cheap to measure (576 Pauli terms at N=128), but physically less accurate for high-frequency modes
 - Consistent mass (tridiagonal M): Better physics, but 5× more Pauli terms (2,950 at N=128)
 
-You cannot have all three. The paper's data at multiple sizes:
+The paper's data at multiple sizes:
 
 | N | Lumped Pauli terms | Consistent Pauli terms | Ratio |
 |---|---|---|---|
