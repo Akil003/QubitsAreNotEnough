@@ -1,0 +1,15 @@
+{
+  "gershgorin_ratio_range": [
+    1.014446500373784,
+    1.110213144981536
+  ],
+  "max_pauli_terms": 2950,
+  "consistent_mass_density_at_128": 0.3077392578125,
+  "lumped_mass_density_at_128": 0.0233154296875,
+  "gradient_variance_ratio_7q": 0.01980711495093662,
+  "best_16dof_vqe_error_pct": 4.090708559430468e-09,
+  "damage_accuracy_10pct_10000shots": 0.215,
+  "mode1_shot_rmse_10000": 7.869265341872441,
+  "timing_max_seconds": 0.2730433409997203,
+  "noise_mode1_max_rmse_pct": 99.59934404296992
+}

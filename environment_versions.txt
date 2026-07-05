@@ -1,0 +1,9 @@
+Tested environment
+==================
+Python 3.13.5
+NumPy 2.3.5
+SciPy 1.17.0
+pandas 2.2.3
+Matplotlib 3.10.8
+LaTeX engine: pdfTeX (TeX Live installation in the build environment)
+Bibliography processor: BibTeX
