@@ -2,6 +2,12 @@
 
 Items to review before final submission. Each entry references the specific location in the paper and proposes a concrete change.
 
+> **Status (all four implemented).**
+> - **#1 Complexity comparison** — added subsection "End-to-end asymptotic cost" (`tab:complexity`, time + space) in Sec. VI and an illustrative 128-DOF table (`tab:concrete`) + hedged quantum-win remark in Sec. VIII. Numbers validated by `validate_outputs.py::validate_complexity`.
+> - **#2 Causal chain** — `eq:trilemma` reframed from a trilemma to a two-term causal chain (Sec. VIII).
+> - **#3 Gradient sweep** — extended 7 → 12 qubits with an exponential-vs-polynomial decay fit; power law (R²=0.96) beats exponential (R²=0.83), so no barren-plateau signature over the range. Regenerated `gradient_trainability.csv` + figure.
+> - **#4 Depth law** — added a Remark after `tab:vqe_depth` deriving `n_q(L+1) ≥ 2^{n_q}−1 ⇒ L = Ω(N/log N)`, verified against every table row.
+
 ---
 
 ## 1. Formal end-to-end complexity comparison is missing
@@ -12,15 +18,34 @@ Items to review before final submission. Each entry references the specific loca
 
 **What would strengthen the paper:**
 
-```
-For k modes of an N-DOF banded chain:
+The tested structures are **1D fixed-base shear chains** (Tests A–E, N ∈ {4,…,128}), so `K` and `M` are tridiagonal with half-bandwidth `b = 1` (constant). That controls the cost model:
 
-  Classical:  O(k · N · √N)  =  O(kN^{3/2})    [Lanczos with gap ratio ~ π/(2N)]
-  Quantum:    O(N³)                               [preprocessing alone]
-            + O(k · N_P · ε⁻² · evals)           [measurement phase, N_P = O(N²) for consistent mass]
+```
+For k modes of an N-DOF banded 1D chain (half-bandwidth b = O(1)):
+
+  Classical (Lanczos/ARPACK):
+    O(k · N · T_it)                    banded matvec O(N·b) = O(N); T_it iterations
+      T_it ≈ 10²–10³ in practice (ARPACK shift-invert, ~const in N);
+      O(√N)–O(N) for unpreconditioned Lanczos, gap-dependent (see caveat).
+
+  Quantum (VQD) preprocessing:
+    O(N·b²) = O(N)                     banded Cholesky of M   (NOT O(N³))
+    + O(N²)                            whitening densifies A + Pauli decomposition
+                                       (consistent mass: density → 0.31, N_P = O(N²))
+
+  Quantum (VQD) measurement — the dominant term:
+    O(k · N_P · ε⁻² · evals) = O(k · N² · ε⁻² · evals)
 ```
 
-The key observation: **quantum preprocessing (O(N³)) already exceeds the entire classical solve (O(kN^{3/2})) for sparse 1D systems.** The quantum approach loses before any circuit runs. This is a logical impossibility — the pipeline requires classical work harder than the problem it's trying to solve quantumly.
+**Corrected key observation (the earlier O(N³) claim was wrong).** For these 1D chains the banded Cholesky is `O(N)`, not `O(N³)` — the "preprocessing loses before any circuit runs because O(N³) > O(kN^{3/2})" framing does **not** hold and must not go into the paper. The real, defensible asymmetry is **densification and measurement**, not factorization:
+
+1. Classical Lanczos operates on the *sparse* `K` directly: cost scales with `nnz(K) = O(N)`.
+2. Whitening turns `A = L⁻¹KL⁻ᵀ` into a *dense-ish* operator (density → 0.31 for consistent mass), so the Pauli representation has `N_P = O(N²)` terms.
+3. **Merely enumerating and storing those `O(N²)` Pauli terms already costs more than the entire classical eigensolve** (`O(k·N·T_it)`) once `N` is large relative to `k` — and that is *before a single shot*. The `ε⁻²·evals` measurement factor then makes the gap enormous.
+
+So the pipeline still "loses before any circuit runs," but because of `O(N²)` densification/Pauli construction, not `O(N³)` Cholesky.
+
+**Caveat to resolve before quoting a classical exponent.** `T_it` depends on the relative spectral gap. For a uniform chain `λ_j = ω_j² ∝ j²/N²`, so the relative gap is `γ ~ 1/N²`; Kaniel–Paige–Saad gives `T_it ~ γ^{-1/2} ~ N`, i.e. `O(kN²)` total for unpreconditioned Lanczos — **not** the `O(kN^{3/2})` originally written (that assumed a `~1/N` gap, which is the ω-spacing, not the λ gap). ARPACK shift-invert side-steps this (≈ const iterations) at the price of one `O(N)` banded factorization. **Do not commit to a single crisp classical exponent in the paper**; state the solver (shift-invert vs plain Lanczos) and gap scaling explicitly, or report the empirical iteration count.
 
 See [`complexity_section_addition.md`](complexity_section_addition.md) for draft tables (theoretical + practical).
 

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import math
 import re
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -59,10 +61,83 @@ def validate_numbers() -> None:
     close(float(summary["qwc_floor_mode1_at_100k_pct"]), 0.8287785573, rtol=1e-9)
 
 
+def validate_complexity() -> None:
+    """Tie the manuscript complexity table (tab:complexity) and the illustrative
+    128-DOF example (tab:concrete) to the reproduction code.
+
+    Only deterministic quantities are asserted (qubit count, exact Pauli-term
+    count, whitened density, and local scaling-exponent sanity bands). Wall-clock
+    and Lanczos matvec counts are machine/library dependent and are deliberately
+    not gated here.
+    """
+    sys.path.insert(0, str(ROOT))
+    import revision_study as rs  # safe: only path setup + RNG seed run on import
+    from scipy.linalg import eigh
+
+    def whiten(n: int, mass_type: str) -> np.ndarray:
+        M, K, _ = rs.chain_model(n, mass_type)
+        A, _, _, _ = rs.mass_whiten(M, K)
+        return A
+
+    def pauli_terms(A: np.ndarray, n: int) -> int:
+        lam_max = float(eigh(A, eigvals_only=True, subset_by_index=[n - 1, n - 1])[0])
+        return int(len(rs.pauli_coefficients(A / lam_max, tol=1e-10)))
+
+    def nnz_density(A: np.ndarray) -> tuple[int, float]:
+        nnz = int(np.count_nonzero(np.abs(A) > 1e-12 * np.max(np.abs(A))))
+        return nnz, nnz / A.size
+
+    # Illustrative 128-DOF, k=4 consistent-mass example (tab:concrete).
+    n = 128
+    if int(round(math.log2(n))) != 7:
+        raise AssertionError("N=128 must encode in 7 qubits")
+    A128 = whiten(n, "consistent")
+    n_pauli = pauli_terms(A128, n)
+    if n_pauli != 2950:
+        raise AssertionError(f"consistent-mass Pauli count expected 2950, got {n_pauli}")
+    _, dens = nnz_density(A128)
+    close(dens, 0.3077392578125, rtol=1e-9)
+
+    # The recomputed values must match the committed scaling table.
+    scaling = pd.read_csv(ROOT / "revision_data" / "hamiltonian_scaling.csv")
+    stored = scaling[(scaling.mass_type == "consistent") & (scaling.dof == 128)].iloc[0]
+    if int(stored.pauli_terms) != n_pauli:
+        raise AssertionError("recomputed Pauli count disagrees with hamiltonian_scaling.csv")
+    close(float(stored.density_A), dens, rtol=1e-12)
+
+    # Illustrative circuit-execution estimate is order 1e11 (arithmetic only).
+    execs = 1e5 * n_pauli * 300 * 4
+    if not (1e11 <= execs <= 1e12):
+        raise AssertionError(f"execution estimate outside 1e11-1e12 band: {execs:.2e}")
+
+    # Asymptotic-row sanity: local scaling exponents over the tested range.
+    ns = [16, 32, 64, 128]
+    nnz_cons, pauli_cons, nnz_lump = [], [], []
+    for nn in ns:
+        Ac, Al = whiten(nn, "consistent"), whiten(nn, "lumped")
+        nnz_cons.append(nnz_density(Ac)[0])
+        nnz_lump.append(nnz_density(Al)[0])
+        pauli_cons.append(pauli_terms(Ac, nn))
+
+    def slope(ys: list) -> float:
+        return float(np.polyfit(np.log(ns), np.log(ys), 1)[0])
+
+    s_nnz, s_pauli, s_lump = slope(nnz_cons), slope(pauli_cons), slope(nnz_lump)
+    # Consistent-mass densification is superlinear but within the O(N^2) upper bound.
+    if not (1.0 < s_nnz < 2.05):
+        raise AssertionError(f"nnz(A) consistent slope out of band: {s_nnz:.3f}")
+    if not (1.0 < s_pauli < 2.05):
+        raise AssertionError(f"Pauli consistent slope out of band: {s_pauli:.3f}")
+    # Lumped mass stays near-linear (near-diagonal operator).
+    if not (s_lump < 1.3):
+        raise AssertionError(f"lumped nnz(A) slope unexpectedly high: {s_lump:.3f}")
+
+
 def main() -> None:
     validate_citations()
     validate_numbers()
-    print("All citation and numerical integrity checks passed.")
+    validate_complexity()
+    print("All citation, numerical, and complexity integrity checks passed.")
 
 
 if __name__ == "__main__":

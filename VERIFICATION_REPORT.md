@@ -28,7 +28,7 @@ All citation and numerical integrity checks passed.
 ## PDF checks
 
 - Compiled with pdfLaTeX, BibTeX, and two final pdfLaTeX passes.
-- 12 TQE-formatted pages.
+- 13 TQE-formatted pages.
 - PDF is unencrypted, text-based, and openable with PyMuPDF.
 - All pages were rendered and visually inspected.
 - Wide measurement and shot-requirement tables were converted to full-width IEEE floats to prevent overlap.

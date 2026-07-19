@@ -75,6 +75,32 @@ def chain_model(n: int, mass_type: str = "lumped", damage_story: int | None = No
     return M, K, Ke
 
 
+def chain_MK(n: int, mass_type: str = "consistent") -> tuple[np.ndarray, np.ndarray]:
+    """M and K identical to ``chain_model(n, mass_type)`` but without the
+    ``O(N^3)``-memory per-element matrix list, so studies that need only the
+    assembled operators (e.g. the trainability sweep) can reach larger n.
+    """
+    xi = np.linspace(0.0, 1.0, n)
+    k = 2.2e8 * (1.0 - 0.35 * xi)
+    me = 2.0e4 * (1.0 - 0.20 * xi)
+    Kfull = np.zeros((n + 1, n + 1))
+    Mfull = np.zeros((n + 1, n + 1))
+    for e in range(n):
+        ids = (e, e + 1)
+        ke2 = k[e] * np.array([[1.0, -1.0], [-1.0, 1.0]])
+        if mass_type == "consistent":
+            me2 = me[e] / 6.0 * np.array([[2.0, 1.0], [1.0, 2.0]])
+        elif mass_type == "lumped":
+            me2 = me[e] / 2.0 * np.eye(2)
+        else:
+            raise ValueError(mass_type)
+        for a in range(2):
+            for b in range(2):
+                Kfull[ids[a], ids[b]] += ke2[a, b]
+                Mfull[ids[a], ids[b]] += me2[a, b]
+    return Mfull[1:, 1:], Kfull[1:, 1:]
+
+
 def mass_whiten(M: np.ndarray, K: np.ndarray) -> tuple[np.ndarray, np.ndarray, float, float]:
     t0 = time.perf_counter()
     L = cholesky(M, lower=True, check_finite=False)
@@ -413,12 +439,14 @@ def preprocessing_timing() -> pd.DataFrame:
 
 def gradient_trainability() -> pd.DataFrame:
     # Use a dedicated seed so this diagnostic is reproducible independently of
-    # the Monte Carlo studies executed before or after it.
+    # the Monte Carlo studies executed before or after it. A separate bootstrap
+    # stream leaves the main sampling stream (hence the point estimates) untouched.
     rng = np.random.default_rng(20260623)
+    boot = np.random.default_rng(20260624)
     rows = []
-    for nqubits in range(2, 8):
+    for nqubits in range(2, 13):
         n = 2 ** nqubits
-        M, K, _ = chain_model(n, "consistent")
+        M, K = chain_MK(n, "consistent")
         A, _, _, _ = mass_whiten(M, K)
         H = A / eigh(A, eigvals_only=True, subset_by_index=[n - 1, n - 1])[0]
         depth = 2
@@ -439,15 +467,67 @@ def gradient_trainability() -> pd.DataFrame:
                 grads.append(grad)
                 psi = circ.state(theta)
                 energies.append(float(psi @ H @ psi))
+            # Bootstrap CI for the gradient variance (2000 resamples of the 80 draws).
+            g_arr = np.asarray(grads)
+            bidx = boot.integers(0, g_arr.size, size=(2000, g_arr.size))
+            bvar = g_arr[bidx].var(axis=1, ddof=1)
+            ci_lo, ci_hi = (float(x) for x in np.quantile(bvar, [0.025, 0.975]))
             rows.append({"qubits": nqubits, "dof": n, "initialization": init,
                          "gradient_variance": float(np.var(grads, ddof=1)),
+                         "gradient_variance_ci_lo": ci_lo,
+                         "gradient_variance_ci_hi": ci_hi,
+                         "se_log_variance": float(np.std(np.log(bvar), ddof=1)),
                          "mean_abs_gradient": float(np.mean(np.abs(grads))),
                          "energy_variance": float(np.var(energies, ddof=1))})
     df = pd.DataFrame(rows)
     df.to_csv(DATA / "gradient_trainability.csv", index=False)
+
+    # Model discrimination on the uniform-init series.
+    # Exponential model: log V = a + b*n_q ; polynomial model: log V = a + p*log(n_q).
+    # Same parameter count (2), so R^2 and AIC rank identically; AIC quantifies the gap.
+    uni = df[df.initialization == "uniform"].sort_values("qubits")
+    nq = uni["qubits"].to_numpy(dtype=float)
+    logv = np.log(uni["gradient_variance"].to_numpy())
+
+    def _fit(x: np.ndarray, y: np.ndarray) -> dict:
+        coeff, cov = np.polyfit(x, y, 1, cov=True)
+        resid = y - np.polyval(coeff, x)
+        rss = float(np.sum(resid ** 2))
+        m = y.size
+        return {"slope": float(coeff[0]), "slope_se": float(np.sqrt(cov[0, 0])),
+                "r2": float(1.0 - rss / np.sum((y - y.mean()) ** 2)),
+                "aic": float(m * np.log(rss / m) + 2 * 2)}
+
+    def _report(mask: np.ndarray, label: str) -> None:
+        e = _fit(nq[mask], logv[mask])
+        p = _fit(np.log(nq[mask]), logv[mask])
+        print(f"[gradient] {label} (n={int(mask.sum())}): "
+              f"exp R^2={e['r2']:.3f} rate={e['slope']:.3f}/qubit AIC={e['aic']:.1f} | "
+              f"poly R^2={p['r2']:.3f} exponent={p['slope']:.3f} AIC={p['aic']:.1f} | "
+              f"dAIC(exp-poly)={e['aic'] - p['aic']:+.1f}")
+
+    _report(nq >= 2, "full range n_q=2-12")
+    _report(nq >= 4, "restricted n_q=4-12")
+    # Direct flatness test: is the tail (n_q>=7) exponential slope distinguishable from 0?
+    tail = _fit(nq[nq >= 7], logv[nq >= 7])
+    lo, hi = tail["slope"] - 1.96 * tail["slope_se"], tail["slope"] + 1.96 * tail["slope_se"]
+    print(f"[gradient] tail slope n_q=7-12: {tail['slope']:.3f}/qubit "
+          f"(95% CI [{lo:.3f}, {hi:.3f}]) -> {'consistent with 0 (flat)' if lo < 0 < hi else 'nonzero'}")
+
+    e_full, p_full = _fit(nq, logv), _fit(np.log(nq), logv)
     fig, ax = plt.subplots(figsize=(8.2, 4.8))
     for init, g in df.groupby("initialization"):
-        ax.semilogy(g["qubits"], g["gradient_variance"], marker="o", label=init.replace("_", " ").title())
+        g = g.sort_values("qubits")
+        gv = g["gradient_variance"].to_numpy()
+        yerr = np.vstack([gv - g["gradient_variance_ci_lo"].to_numpy(),
+                          g["gradient_variance_ci_hi"].to_numpy() - gv])
+        ax.errorbar(g["qubits"], gv, yerr=np.clip(yerr, 0, None), marker="o",
+                    capsize=2, label=init.replace("_", " ").title())
+    ax.semilogy(nq, np.exp(np.polyval([e_full["slope"], np.polyfit(nq, logv, 1)[1]], nq)), "--",
+                color="0.45", label=fr"Exponential fit ($R^2={e_full['r2']:.2f}$)")
+    ax.semilogy(nq, np.exp(np.polyval(np.polyfit(np.log(nq), logv, 1), np.log(nq))), ":",
+                color="0.45", label=fr"Polynomial fit ($R^2={p_full['r2']:.2f}$)")
+    ax.set_yscale("log")
     ax.set_xlabel("Qubits")
     ax.set_ylabel("Variance of a parameter-shift gradient")
     ax.grid(True, which="both", alpha=0.25)

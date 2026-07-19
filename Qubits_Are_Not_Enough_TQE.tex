@@ -60,15 +60,13 @@
 
 \title{Deflation and Measurement Limits in Variational Quantum Modal Analysis}
 
-\author{\uppercase{Bikalpa Gautam}\authorrefmark{1}}
+\author{\uppercase{Bikalpa Gautam}\authorrefmark{1}, \uppercase{Akil Raj Subedi}\authorrefmark{2}}
 \address[1]{Department of Civil, Environmental and Geomatic Engineering, ETH Zurich, 8093 Zurich, Switzerland}
-
-% \author{\uppercase{Akil Raj Subedi}\authorrefmark{2}}
-% \address[2]{Zynga, Bangalore, India}
+\address[2]{Zynga Inc., Bangalore, India}
 
 \markboth
-{B. Gautam: Deflation and Measurement Limits in Variational Quantum Modal Analysis}
-{B. Gautam: Deflation and Measurement Limits in Variational Quantum Modal Analysis}
+{B. Gautam and A. R. Subedi: Deflation and Measurement Limits in Variational Quantum Modal Analysis}
+{B. Gautam and A. R. Subedi: Deflation and Measurement Limits in Variational Quantum Modal Analysis}
 
 \corresp{Corresponding author: Bikalpa Gautam (bgautam@ethz.ch)}
 
@@ -433,7 +431,7 @@ U_L(\theta)=\prod_{\ell=1}^{L}
 \end{equation}
 Logarithmic qubit count does not imply shallow representability. A normalized real vector in $D=2^{n_q}$ dimensions has $D-1$ independent amplitudes, whereas a depth-$L$ hardware-efficient circuit has only $O(Ln_q)$ parameters. Therefore, a fixed-depth family cannot be universally expressive as $N$ grows.
 
-Random parameterized circuits may exhibit barren plateaus in which gradient variance decays exponentially with qubit count \cite{McClean2018}. Cost-function locality can materially alter trainability, and even shallow circuits with global costs may exhibit barren plateaus \cite{CerezoBP2021}. Binary amplitude encoding and Cholesky whitening can turn a local structural operator into a nonlocal qubit Hamiltonian, so structural locality does not guarantee a local quantum cost. This concern is directly connected to the scaling results in \cref{sec:results}: for consistent mass, the transformed density grows to 0.308 and the Pauli count to 2950 at $N=128$, indicating that increasingly many computational-basis amplitudes and Pauli supports become coupled. Such densification moves the objective away from the local-cost setting in which trainability can be more favorable and toward the global-cost regime associated with gradient concentration. The present 2--7-qubit data cannot establish a structural barren plateau, but they show that whitening-induced nonlocality can worsen the locality condition as $N$ grows independently of whether circuit depth is increased. Quantifying this interaction for larger qubit counts, alternative orderings, and domain-decomposed mappings is therefore an open problem rather than an assumed asymptotic advantage.
+Random parameterized circuits may exhibit barren plateaus in which gradient variance decays exponentially with qubit count \cite{McClean2018}. Cost-function locality can materially alter trainability, and even shallow circuits with global costs may exhibit barren plateaus \cite{CerezoBP2021}. Binary amplitude encoding and Cholesky whitening can turn a local structural operator into a nonlocal qubit Hamiltonian, so structural locality does not guarantee a local quantum cost. This concern is directly connected to the scaling results in \cref{sec:results}: for consistent mass, the transformed density grows to 0.308 and the Pauli count to 2950 at $N=128$, indicating that increasingly many computational-basis amplitudes and Pauli supports become coupled. Such densification moves the objective away from the local-cost setting in which trainability can be more favorable and toward the global-cost regime associated with gradient concentration. The present 2--12-qubit data cannot establish a structural barren plateau, but they show that whitening-induced nonlocality can worsen the locality condition as $N$ grows independently of whether circuit depth is increased. Quantifying this interaction for larger qubit counts, alternative orderings, and domain-decomposed mappings is therefore an open problem rather than an assumed asymptotic advantage.
 
 For parameter $\theta_a$, the empirical trainability statistic used here is
 \begin{equation}
@@ -441,7 +439,7 @@ V_g(n_q)=\Var_{\theta\sim\mathcal D}
 \left[\frac{\partial E(\theta)}{\partial\theta_a}\right].
 \label{eq:gradvar}
 \end{equation}
-A finite $n_q\le7$ study cannot prove or disprove an asymptotic barren plateau. It can only detect whether gradients are already shrinking over the tested range and whether initialization changes their scale.
+A finite $n_q\le12$ study cannot prove or disprove an asymptotic barren plateau, but it can detect whether an exponential decay has already set in. Over the tested range it has not (\cref{sec:results}): the uniform-initialization gradient variance is better described by a polynomial than by an exponential in $n_q$, and its high-qubit slope is far shallower than an exponential collapse.
 
 \section{Recovery, structural identification, and health-monitoring observables}
 \label{sec:observables}
@@ -671,6 +669,36 @@ No dimensionally mixed ``information efficiency'' is defined. Instead, the raw r
 \end{equation}
 where $N_G$ is the number of measurement groups; $C_{\mathrm{asm}}$, $C_{\mathrm{chol}}$, $C_{\mathrm{bound}}$, and $C_{\mathrm{Pauli}}$ denote classical matrix assembly, whitening, spectral-bound, and Pauli-construction costs; and $C_{\mathrm{prep}}$ is quantum state-preparation cost. When the global Gershgorin policy \cref{eq:globalUr} is used, $C_{\mathrm{bound}}$ contains only the row-sum calculation. When a Ritz/Lanczos bound is used, its iterations, matrix--vector products, storage, and projected eigensolve are reported explicitly.
 
+\subsection{End-to-end asymptotic cost}
+\label{sec:complexity}
+
+The resource vector \cref{eq:resourcevector} collapses into asymptotic order for the tested one-dimensional chains, where $\M$ and $\K$ are banded with constant half-bandwidth $b$. In the following, $k$ is the number of requested modes, $N_P$ the number of nonzero Pauli terms \eqref{eq:pauli}, $N_{\mathrm{eval}}$ the number of optimizer evaluations, $T_{\mathrm{it}}$ the classical Lanczos iteration count, and $\varepsilon$ the target accuracy of a single energy estimate. \Cref{tab:complexity} compares a sparse classical eigensolver with the variational quantum pipeline for the $k$ lowest modes of an $N$-DOF chain.
+
+\begin{table}[t]
+\centering
+\caption{End-to-end asymptotic time and space for the $k$ lowest modes of an $N$-DOF banded 1D chain (constant half-bandwidth $b$). Dashes mark steps the classical solver does not perform.}
+\label{tab:complexity}
+\begin{tabular}{lll}
+\toprule
+Stage & Classical (Lanczos) & Quantum (VQD)\\
+\midrule
+Assembly & $O(N)$ & $O(N)$\\
+Cholesky of $\M$ & --- & $O(Nb^2)=O(N)$\\
+Whitening $\A$ & --- & $O(N^2)$\\
+Pauli decomposition & --- & $O(N^2\log N)$\\
+Solve / measure & $O(kN\,T_{\mathrm{it}})$ & $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$\\
+\midrule
+Total time & $O(kN\,T_{\mathrm{it}})$ & $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$\\
+Space & $O(Nk)$ & $O(N)+O(N^2)^{\dagger}$\\
+\bottomrule
+\end{tabular}
+
+\vspace{0.35em}
+\parbox{\columnwidth}{\footnotesize $T_{\mathrm{it}}$ is the Lanczos iteration count: approximately constant with shift-invert ARPACK, and $O(\sqrt N)$--$O(N)$ for unpreconditioned Lanczos depending on the relative spectral gap. $^{\dagger}$$O(N)$ statevector amplitudes plus $O(N^2)$ classical storage for the dense-whitened operator and its Pauli list.}
+\end{table}
+
+Three consequences follow. First, preprocessing is not the bottleneck for these chains: the banded Cholesky is $O(N)$, not the $O(N^3)$ dense cost noted in \cref{sec:mapping}. Second, the classical solver acts on the sparse $\K$ directly, so its cost scales with $\mathrm{nnz}(\K)=O(N)$, whereas whitening densifies $\A$---from density $0.023$ to $0.308$ between lumped and consistent mass at $N=128$---so the Pauli representation carries $N_P=O(N^2)$ terms in the worst case ($4^{n_q}\le4N^2$). This quadratic figure is an upper bound: over the tested range the consistent-mass density and Pauli count grow sub-quadratically (empirical exponent ${\approx}1.4$--$1.5$, \cref{fig:pauliscale}), and no universal quadratic law is claimed. Even so, merely constructing and storing that operator is superlinear in both time and space, and already exceeds the entire classical eigensolve once $N$ is large relative to $k$, before a single shot is taken. Third, the measurement phase $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$ dominates the quantum column; by \cref{eq:freqvar} the low-frequency modes are the most sampling-intensive because the eigenvalue-to-frequency map amplifies variance as $1/f_i^2$. The classical cost is left as $O(kN\,T_{\mathrm{it}})$ rather than a single power of $N$ because $T_{\mathrm{it}}$ depends on the solver and the spectral gap; under either policy it is far below the quantum column. The optimizer factor $N_{\mathrm{eval}}$ and the shots needed per gradient enter only through trainability, and \cref{sec:results} finds the gradient variance decaying polynomially rather than exponentially in $n_q$ over the tested range, i.e.\ a polylogarithmic factor in $N$; the no-advantage conclusion therefore rests on the measurement bottleneck and does not depend on assuming an untrainable barren plateau.
+
 \section{Numerical program}
 \label{sec:numerical}
 
@@ -794,14 +822,25 @@ $N$ & Qubits & Depth & Parameters & Frequency error (\%)\\
 
 Twenty six-DOF restarts reinforce this interpretation. Depth 1 has a minimum first-mode error of 127.99\%, a median of 130.20\%, and a maximum of 130.20\%; depth 2 has a median error $4.3\times10^{-12}$\%. The shallow failure is therefore systematic ansatz error, not an unlucky optimizer seed.
 
+\begin{remark}[Parameter-count lower bound on required depth]
+The depth dependence in \cref{tab:vqe_depth} follows from a parameter count. A real, normalized state in $D=2^{n_q}$ dimensions has $D-1$ free amplitudes, whereas the real-amplitude circuit of \cref{eq:ansatz} at depth $L$ has $n_q(L+1)$ parameters. Reaching an arbitrary target therefore requires
+\begin{equation}
+n_q(L+1)\ge 2^{n_q}-1,
+\qquad\text{equivalently}\qquad
+L\ge\frac{2^{n_q}-1}{n_q}-1.
+\label{eq:depthbound}
+\end{equation}
+This necessary condition predicts every row of \cref{tab:vqe_depth}: for $n_q=3$ it holds at $L=2$ ($9\ge7$) but not $L=1$ ($6<7$); for $n_q=4$ it holds at $L=3$ ($16\ge15$) but not $L=2$ ($12<15$). Since $2^{n_q}=N$, the required depth grows as $L=\Omega(N/\log_2 N)$, so a fixed-depth family cannot remain expressive as $N$ increases and the logarithmic qubit count does not translate into a logarithmic-depth circuit. The condition is necessary but not sufficient: the CNOT-ring entangler can further restrict the reachable manifold, so \cref{eq:depthbound} is a lower bound on the depth an exact preparation requires. This is consistent with the systematic shallow-circuit failure reported above.
+\end{remark}
+
 \subsection{Gradient statistics raise, but do not settle, the barren-plateau question}
 
-\Cref{fig:gradients} reports gradient variance for a depth-2 circuit. Under uniform initialization it decreases from $2.62\times10^{-2}$ at 2 qubits to $1.59\times10^{-3}$ at 7 qubits. Near-identity initialization produces smaller and nonmonotonic values, including $3.14\times10^{-5}$ at 7 qubits. These data show strong initialization dependence and shrinking gradients over the tested range. They are too small in scale to establish an asymptotic law, so the manuscript does not claim absence or presence of a true barren plateau.
+\Cref{fig:gradients} reports gradient variance for a depth-2 circuit over 2--12 qubits, with bootstrap 95\% confidence intervals from the 80 samples per point. Under uniform initialization the variance declines from $2.62\times10^{-2}$ at 2 qubits to $9.82\times10^{-4}$ at 12 qubits. A power law in $n_q$ fits the uniform-initialization series better than an exponential: over the full range $R^2=0.96$ versus $0.83$, favouring the power law by $\Delta\mathrm{AIC}=15$; over the small-system-free range $n_q\ge4$ the advantage narrows to $R^2=0.90$ versus $0.85$ ($\Delta\mathrm{AIC}=4$, moderate). The decline does not stop: a linear fit to the tail ($n_q\ge7$) gives a shallow slope of $-0.12$ per qubit (95\% CI $[-0.23,-0.01]$), statistically nonzero but far below the per-qubit exponential rate that defines a barren plateau. Near-identity initialization produces smaller and nonmonotonic values, including $1.52\times10^{-5}$ at 12 qubits. Thus over the accessible range the gradients shrink at an approximately polynomial, not exponential, rate; $n_q\le12$ remains far from asymptotic, so the manuscript does not claim the definitive absence of a true barren plateau at larger scale.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{gradient_trainability.pdf}
-\caption{Empirical gradient variance for depth-2 real-amplitude circuits. The finite range is a diagnostic, not an asymptotic barren-plateau proof.}
+\caption{Empirical gradient variance for depth-2 real-amplitude circuits over 2--12 qubits, with bootstrap 95\% confidence intervals and polynomial and exponential fits to the uniform-initialization series. The variance is better fit by a power law than an exponential; the finite range is a diagnostic, not an asymptotic barren-plateau proof.}
 \label{fig:gradients}
 \end{figure}
 
@@ -869,17 +908,41 @@ The proposed framework therefore uses theorem-based penalties, constrained diagn
 
 \subsection{The actual scaling bottleneck}
 
-For the tested chain models, Gershgorin looseness is modest. The more serious issue is that consistent-mass whitening changes operator structure, increasing nonzero Pauli terms and measurement groups. This creates a three-way design problem:
+For the tested chain models, Gershgorin looseness is modest. The more serious issue is that consistent-mass whitening changes operator structure, increasing nonzero Pauli terms and measurement groups. The density of $\A$ is not an independent design variable: for fixed $\K$ and DOF ordering it is a deterministic consequence of the mass model through the Cholesky factor. The design tension is therefore a two-term causal chain rather than a trilemma,
 \begin{equation}
 \boxed{
 \begin{aligned}
-\text{physical fidelity of }\M
-&\ \leftrightarrow\ \text{sparsity of }\A\\
-&\ \leftrightarrow\ \text{measurement cost}.
+&\text{physical fidelity of }\M\\
+&\quad\xrightarrow{\text{Cholesky}}\text{density of }\A\\
+&\quad\xrightarrow{\text{Pauli}}\text{measurement cost}.
 \end{aligned}}
 \label{eq:trilemma}
 \end{equation}
-Lumped mass may be cheaper quantum mechanically but can perturb high modes; consistent mass may be more faithful but measurement-heavy. A credible study must report both modal discretization error and quantum resource consequences.
+in which only the physical fidelity of $\M$ and the resulting measurement cost are genuinely in opposition; the intermediate density of $\A$ is induced, and is further modulated by DOF ordering and coefficient thresholding. Lumped mass may be cheaper quantum mechanically but can perturb high modes; consistent mass may be more faithful but measurement-heavy. A credible study must report both modal discretization error and quantum resource consequences.
+
+As an illustration, consider the $N=128$, $k=4$ consistent-mass chain of \cref{tab:scaling}. \Cref{tab:concrete} contrasts the two routes with order-of-magnitude figures.
+
+\begin{table}[t]
+\centering
+\caption{Illustrative end-to-end comparison for the $N=128$, $k=4$ consistent-mass chain. Preprocessing is finite-element assembly (classical) versus Cholesky factorization, whitening, and Pauli decomposition (quantum). Quantum figures are order-of-magnitude estimates, not measured device results.}
+\label{tab:concrete}
+\begin{tabular}{lll}
+\toprule
+Quantity & Classical & Quantum\\
+\midrule
+Qubits & --- & 7\\
+Preprocessing & $O(N)$ & $O(N^2)$\\
+Nonzero Pauli terms & --- & 2950\\
+Core work & ${\sim}1400$ matvecs & ${\sim}10^{11}$ circuits$^{\ddagger}$\\
+Wall time & ${<}1$\,s & ${\sim}10^{5}$\,s\\
+\bottomrule
+\end{tabular}
+
+\vspace{0.35em}
+\parbox{\columnwidth}{\footnotesize $^{\ddagger}$${\sim}10^{5}$ shots per term $\times\,2950$ terms $\times$ a few hundred optimizer evaluations $\times\,4$ modes; the wall time assumes an optimistic $1\,\mu$s per circuit execution with no queueing, calibration, or readout overhead.}
+\end{table}
+
+The gap spans several orders of magnitude and is dominated by measurement, not preprocessing, which supports the qualitative statement that classical methods are overwhelmingly preferable for the present benchmarks. Any regime in which a quantum route could become competitive lies outside the variational setting studied here: it would require either fault-tolerant quantum phase estimation rather than sampling-based VQE, or operators that are genuinely dense so that classical sparsity offers no advantage---neither of which applies to sparse structural finite-element models. This is stated only to delimit scope and is not a claim of attainable advantage.
 
 \subsection{Implications for structural health monitoring}
 
