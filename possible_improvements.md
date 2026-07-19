@@ -120,3 +120,23 @@ This predicts every row. More importantly, it gives a **scaling law**: required 
 **Suggested addition:** A remark after Table III or in Section V.
 
 ---
+
+# To-do (future revisions — not yet implemented)
+
+Captured from a critical review; none block initial submission. `T1` is the highest-leverage item for first-round acceptance at IEEE TQE.
+
+## T1. Add a 2D finite-element example (highest priority)
+
+**Why:** every current experiment is a 1D shear chain — the *best* case for Cholesky fill. The regime that matters (2D/3D FE) is only extrapolated verbally, and the most probable first-round reviewer demand is "show at least one 2D example." A 2D case **strengthens** the negative conclusions (2D fill is worse); it does not change them.
+
+**Blast radius (contained, additive):** the only new code is a 2D FE assembler (Q4 membrane grid or 2D spring lattice); the downstream pipeline (`mass_whiten`, `pauli_coefficients`, `qwc_groups`, density/Gershgorin) is dimension-agnostic and reused unchanged. Sweep e.g. `N ∈ {16, 64, 256}` and report density, Pauli terms, and QWC groups against the 1D chains. `tab:complexity` stays valid (already scoped to 1D); present 2D as the worse comparison and rewrite the Limitations "1D-only" paragraph from an apology into a result. Conclusions and thesis unchanged. **Effort ~half a day.** A symmetric mesh would additionally exercise repeated/degenerate modes.
+
+## T2. Close the end-to-end noisy loop (and scale the simulator)
+Run the full pipeline at 3–4 qubits optimizing **under shot noise** with deflation, so feasibility is demonstrated rather than inferred from the separated exact-state studies. Enabler: rewrite `RealAmplitudeCircuit` as a proper statevector simulator (tensor gate application, `O(2^n)` per gate instead of dense `2^n × 2^n` matmuls) so the loop — and the trainability/scaling sweeps — can reach 16–20 qubits.
+
+## T3. Reduce cognitive load (presentation)
+The paper is dense (74 numbered equations, plus propositions/definitions). Add a notation/symbol table, condense the repetitive parts of the Discussion, and consider a "validated vs proposed" contributions table (temporal tracking, the lexicographic refinement, and sensor-space recovery are proposals without experiments). *(The end-to-end workflow figure has now been added — `fig:workflow`.)*
+
+---
+
+*Deprioritized (revisit only if reviewers ask): a formal lower-bound proposition for the no-speedup claim; a fill-reducing DOF ordering to minimize the Pauli count; a classical-shadows measurement estimate; sharper deflation-theorem novelty positioning against classical (Wielandt) deflation.*
