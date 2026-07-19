@@ -115,6 +115,15 @@ The contributions are:
 \item quantified Pauli, grouping, trainability, finite-shot, and damage-localization studies extending beyond a single three-qubit demonstration.
 \end{enumerate}
 
+\Cref{fig:workflow} summarizes the end-to-end pipeline analyzed in the rest of the paper.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{workflow.pdf}
+\caption{End-to-end pipeline. A finite-element model $(\M,\K)$ is mass-normalized by the Cholesky map $\A=\mathbf L^{-1}\K\mathbf L^{-T}$, spectrally padded and Pauli-decomposed, solved by a variational eigensolver (VQE/VQD) with residual control, and finally converted into modal-validation and damage indicators. Each stage is analyzed for correctness, cost, and measurement precision separately. Red labels mark the dominant bottleneck stages; their asymptotic costs are quantified in \cref{tab:complexity}.}
+\label{fig:workflow}
+\end{figure*}
+
 \section{Structural-dynamics foundation}
 \label{sec:structural}
 
