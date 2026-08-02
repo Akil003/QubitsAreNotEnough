@@ -333,6 +333,56 @@ def run_case(model: ModalModel, name: str, starts: int = 4) -> dict:
     return out
 
 
+def make_workflow_figure() -> None:
+    """Overview pipeline figure.
+
+    Stages are shaded by where they run (only the variational solve touches the
+    quantum device; everything else is classical), and the dominant cost is tagged
+    on the stages the paper identifies as bottlenecks. This makes the figure carry
+    the paper's message (preprocessing/measurement dominate; no speedup) rather than
+    reading as a smooth "it works" pipeline.
+    """
+    from matplotlib.patches import Patch
+
+    classical_fc = "#ededed"
+    quantum_fc = "#cfe2f3"
+    # (x, label, kind, dominant-cost tag)
+    boxes = [
+        (0.02, "Finite-element model\n$\\mathbf{M},\\mathbf{K}$", "classical", ""),
+        (0.22, "Mass normalization\n$\\mathbf{A}=\\mathbf{L}^{-1}\\mathbf{K}\\mathbf{L}^{-T}$", "classical", "densification"),
+        (0.43, "Safe padding and\nPauli decomposition", "classical", "Pauli-term growth"),
+        (0.64, "VQE / VQD\nwith residual control", "quantum", "measurement & depth"),
+        (0.84, "Modal validation and\ndamage indicators", "classical", ""),
+    ]
+    fig, ax = plt.subplots(figsize=(12, 3.6))
+    ax.axis("off")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    for x, text, kind, cost in boxes:
+        fc = quantum_fc if kind == "quantum" else classical_fc
+        lw = 1.9 if kind == "quantum" else 1.2
+        ax.text(x + 0.07, 0.55, text, ha="center", va="center", fontsize=11,
+                bbox=dict(boxstyle="round,pad=0.55", fc=fc, ec="black", lw=lw),
+                transform=ax.transAxes)
+        if kind == "quantum":
+            ax.text(x + 0.07, 0.83, "quantum device", ha="center", va="center",
+                    fontsize=9, style="italic", transform=ax.transAxes)
+        if cost:
+            ax.text(x + 0.07, 0.23, cost, ha="center", va="center", fontsize=9.5,
+                    color="#b00000", transform=ax.transAxes)
+    for x in (0.18, 0.39, 0.60, 0.80):
+        ax.annotate("", xy=(x + 0.035, 0.55), xytext=(x - 0.015, 0.55),
+                    arrowprops=dict(arrowstyle="->", lw=1.5), xycoords=ax.transAxes)
+    ax.legend(handles=[Patch(fc=classical_fc, ec="black", label="Classical"),
+                       Patch(fc=quantum_fc, ec="black", label="Quantum")],
+              loc="lower center", ncol=2, frameon=False, fontsize=10,
+              bbox_to_anchor=(0.5, -0.04))
+    fig.tight_layout()
+    fig.savefig(FIG / "workflow.pdf", bbox_inches="tight")
+    fig.savefig(FIG / "workflow.png", dpi=250, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     baseline_model = build_shear_building()
     damaged_model = build_shear_building(damage_story=2, damage_fraction=0.10)  # third story
@@ -369,25 +419,7 @@ def main() -> None:
     pd.DataFrame(S, index=[f"Mode {i}" for i in range(1, 5)], columns=[f"Story {i}" for i in range(1, 7)]).to_csv(DATA / "damage_sensitivity.csv")
 
     # Figure 1: workflow.
-    fig, ax = plt.subplots(figsize=(12, 3.2))
-    ax.axis("off")
-    boxes = [
-        (0.02, "Finite-element model\n$\\mathbf{M},\\mathbf{K}$"),
-        (0.22, "Mass normalization\n$\\mathbf{A}=\\mathbf{L}^{-1}\\mathbf{K}\\mathbf{L}^{-T}$"),
-        (0.43, "Safe padding and\nPauli decomposition"),
-        (0.64, "VQE / VQD / SSVQE\nwith residual control"),
-        (0.84, "Modal validation and\ndamage indicators"),
-    ]
-    for x, text in boxes:
-        ax.text(x + 0.07, 0.52, text, ha="center", va="center", fontsize=11,
-                bbox=dict(boxstyle="round,pad=0.55", fc="white", ec="black"), transform=ax.transAxes)
-    for x in [0.18, 0.39, 0.60, 0.80]:
-        ax.annotate("", xy=(x + 0.035, 0.52), xytext=(x - 0.015, 0.52),
-                    arrowprops=dict(arrowstyle="->", lw=1.5), xycoords=ax.transAxes)
-    fig.tight_layout()
-    fig.savefig(FIG / "workflow.pdf", bbox_inches="tight")
-    fig.savefig(FIG / "workflow.png", dpi=250, bbox_inches="tight")
-    plt.close(fig)
+    make_workflow_figure()
 
     # Figure 2: frequency error by method/mode.
     labels = list(baseline["methods"].keys())

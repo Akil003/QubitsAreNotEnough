@@ -7,3 +7,8 @@ pandas 2.2.3
 Matplotlib 3.10.8
 LaTeX engine: pdfTeX (TeX Live installation in the build environment)
 Bibliography processor: BibTeX
+
+Note: the trainability sweep (gradient_trainability.csv and its figure) was
+extended to 12 qubits and regenerated on Python 3.12.3. That study is
+deterministic (fixed seed, exact state vectors, no optimizer) and reproduces the
+original 3.13.5 values to ~1e-13; all other outputs remain the original 3.13.5 run.
