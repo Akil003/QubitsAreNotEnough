@@ -940,7 +940,7 @@ As an illustration, consider the $N=128$, $k=4$ consistent-mass chain of \cref{t
 Quantity & Classical & Quantum\\
 \midrule
 Qubits & --- & 7\\
-Preprocessing & $O(N)$ & $O(N^2)$\\
+Preprocessing & $O(N)$ & $O(N^2\log N)$\\
 Nonzero Pauli terms & --- & 2950\\
 Core work & ${\sim}1400$ matvecs & ${\sim}10^{11}$ circuits$^{\ddagger}$\\
 Wall time & ${<}1$\,s & ${\sim}10^{5}$\,s\\
