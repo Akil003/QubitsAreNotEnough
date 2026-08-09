@@ -333,12 +333,12 @@ Indeed, $\varepsilon_j+\beta_j\ge U_r+\tau>\varepsilon_r$. Two bound policies ar
 U_r^{(G)}=U_G/s_t,
 \label{eq:globalUr}
 \end{equation}
-which requires no auxiliary classical eigensolve but can be conservative. Alternatively, if $\vartheta_r^{(k)}$ is the $r$th Ritz value in a $k$-dimensional trial subspace, the min--max principle gives $\varepsilon_r\le\vartheta_r^{(k)}$; hence
+which requires no auxiliary classical eigensolve but can be conservative. Alternatively, if $\vartheta_r^{(p)}$ is the $r$th Ritz value in a $p$-dimensional trial subspace, the min--max principle gives $\varepsilon_r\le\vartheta_r^{(p)}$; hence
 \begin{equation}
-U_r^{(R)}=\vartheta_r^{(k)}+\delta_{\mathrm{fp}}
+U_r^{(R)}=\vartheta_r^{(p)}+\delta_{\mathrm{fp}}
 \label{eq:ritzUr}
 \end{equation}
-is a tighter certified bound after allowing for floating-point error. A sparse $k$-step Lanczos/Ritz pass costs approximately $O(k\,\mathrm{nnz}(\A)+Nk^2+k^3)$ arithmetic and $O(Nk)$ storage, and is therefore recorded explicitly as $C_{\mathrm{bound}}$ in the resource vector rather than treated as free preprocessing.
+is a tighter certified bound after allowing for floating-point error. A sparse $p$-step Lanczos/Ritz pass costs approximately $O(p\,\mathrm{nnz}(\A)+Np^2+p^3)$ arithmetic ($\mathrm{nnz}(\cdot)$ denoting the number of nonzero entries) and $O(Np)$ storage, and is therefore recorded explicitly as $C_{\mathrm{bound}}$ in the resource vector rather than treated as free preprocessing.
 
 For a previously extracted mode, a practical high-confidence error radius can combine an eigenstate residual and Pauli-sampling uncertainty:
 \begin{equation}
@@ -685,7 +685,7 @@ The resource vector \cref{eq:resourcevector} collapses into asymptotic order for
 
 \begin{table}[t]
 \centering
-\caption{End-to-end asymptotic time and space for the $k$ lowest modes of an $N$-DOF banded 1D chain (constant half-bandwidth $b$). Dashes mark steps the classical solver does not perform.}
+\caption{End-to-end asymptotic time and space for the $k$ lowest modes of an $N$-DOF banded 1D chain (constant half-bandwidth $b$). Dashes mark steps the classical solver does not perform.$^{\ddagger}$}
 \label{tab:complexity}
 \begin{tabular}{lll}
 \toprule
@@ -703,7 +703,7 @@ Space & $O(Nk)$ & $O(N)+O(N^2)^{\dagger}$\\
 \end{tabular}
 
 \vspace{0.35em}
-\parbox{\columnwidth}{\footnotesize $T_{\mathrm{it}}$ is the Lanczos iteration count: approximately constant with shift-invert ARPACK, and $O(\sqrt N)$--$O(N)$ for unpreconditioned Lanczos depending on the relative spectral gap. $^{\dagger}$$O(N)$ statevector amplitudes plus $O(N^2)$ classical storage for the dense-whitened operator and its Pauli list.}
+\parbox{\columnwidth}{\footnotesize $T_{\mathrm{it}}$ is the Lanczos iteration count: approximately constant with shift-invert ARPACK, and $O(\sqrt N)$--$O(N)$ for unpreconditioned Lanczos depending on the relative spectral gap. $^{\dagger}$$O(N)$ statevector amplitudes plus $O(N^2)$ classical storage for the dense-whitened operator and its Pauli list. $^{\ddagger}$Spectral-safe padding costs $O(D-N)=O(N)$ since $D<2N$, and the cheap (Gershgorin) bound policy costs $O(N^2)$; both are dominated by the whitening row above and are therefore omitted. The optional tighter Ritz/Lanczos bound policy \eqref{eq:ritzUr} instead costs $O(p\,\mathrm{nnz}(\A)+Np^2+p^3)$ time and $O(Np)$ space, a genuine additional cost not always dominated by whitening, reported separately as $C_{\mathrm{bound}}$.}
 \end{table}
 
 Three consequences follow. First, preprocessing is not the bottleneck for these chains: the banded Cholesky is $O(N)$, not the $O(N^3)$ dense cost noted in \cref{sec:mapping}. Second, the classical solver acts on the sparse $\K$ directly, so its cost scales with $\mathrm{nnz}(\K)=O(N)$, whereas whitening densifies $\A$---from density $0.023$ to $0.308$ between lumped and consistent mass at $N=128$---so the Pauli representation carries $N_P=O(N^2)$ terms in the worst case ($4^{n_q}\le4N^2$). This quadratic figure is an upper bound: over the tested range the consistent-mass density and Pauli count grow sub-quadratically (empirical exponent ${\approx}1.4$--$1.5$, \cref{fig:pauliscale}), and no universal quadratic law is claimed. Even so, merely constructing and storing that operator is superlinear in both time and space, and already exceeds the entire classical eigensolve once $N$ is large relative to $k$, before a single shot is taken. Third, the measurement phase $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$ dominates the quantum column; by \cref{eq:freqvar} the low-frequency modes are the most sampling-intensive because the eigenvalue-to-frequency map amplifies variance as $1/f_i^2$. The classical cost is left as $O(kN\,T_{\mathrm{it}})$ rather than a single power of $N$ because $T_{\mathrm{it}}$ depends on the solver and the spectral gap; under either policy it is far below the quantum column. The optimizer factor $N_{\mathrm{eval}}$ and the shots needed per gradient enter only through trainability, and \cref{sec:results} finds the gradient variance decaying polynomially rather than exponentially in $n_q$ over the tested range, i.e.\ a polylogarithmic factor in $N$; the no-advantage conclusion therefore rests on the measurement bottleneck and does not depend on assuming an untrainable barren plateau.
@@ -1094,7 +1094,7 @@ For an Euler--Bernoulli beam bending element,
 \State Form $\Hq_p$ with $\alpha=U_G/s_t+\delta_p$.
 \State Decompose the required operators and group compatible measurements.
 \For{$r=1,\ldots,m$}
-  \State Select and record the bound policy: $U_r=U_G/s_t$, or compute $U_r=\vartheta_r^{(k)}+\delta_{\mathrm{fp}}$ by a $k$-dimensional Ritz/Lanczos pass and record $C_{\mathrm{bound}}$.
+  \State Select and record the bound policy: $U_r=U_G/s_t$, or compute $U_r=\vartheta_r^{(p)}+\delta_{\mathrm{fp}}$ by a $p$-dimensional Ritz/Lanczos pass and record $C_{\mathrm{bound}}$.
   \For{$j<r$}
     \State Obtain $\delta_j$ from exact validation data or the declared residual-plus-shot confidence rule in \cref{eq:deltabound}.
     \State Set $\beta_j=U_r-\widehat\varepsilon_j+\delta_j+\tau$.
