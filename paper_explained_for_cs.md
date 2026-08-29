@@ -6,6 +6,8 @@ You have a CS background (algorithms, data structures, complexity theory, maybe 
 
 ---
 
+> **Note — kept in sync with the current paper.** This guide was written for an earlier draft. Two corrections are reflected below: (a) the **preprocessing cost** — the banded Cholesky of a 1D chain is **O(N)**, *not* O(N³) (that dense figure applies only to non-banded problems); the real bottleneck is whitening-induced **densification → O(N²) Pauli terms → measurement**. (b) The **trainability study** now spans **2–12 qubits** and finds *polynomial*, not exponential, gradient decay (no barren-plateau signature over the tested range). The end-to-end complexity is now tabulated in the paper (Section VI, "Table 1").
+
 ## Part 0: What Is This Paper About? (The 30-Second Version)
 
 **The question:** Can a quantum computer solve a specific math problem (finding eigenvalues of large matrices) faster than a classical computer?
@@ -19,7 +21,7 @@ You have a CS background (algorithms, data structures, complexity theory, maybe 
 **Why people thought quantum might help:** A quantum computer stores an N-dimensional vector using only log₂(N) "qubits" (quantum bits). So a 1,000,000-dimensional vector needs only 20 qubits. That sounds like an exponential advantage.
 
 **Why it doesn't actually help (the paper's conclusion):** Storing the vector cheaply is just one step. You also need to:
-1. Preprocess the input (costs O(N³) on a classical computer anyway)
+1. Preprocess the input classically (Cholesky whitening + Pauli decomposition) — whitening destroys the sparsity that makes classical solvers fast, so just *building* the operator you will measure can cost more than solving the whole problem classically
 2. Have a deep enough quantum circuit (grows with N, not log N)
 3. Measure the answer (costs O(N²) measurements in the worst case)
 4. Repeat measurements billions of times to get useful accuracy
@@ -249,7 +251,7 @@ INPUT:  M (mass matrix, N×N, sparse, symmetric positive definite)
 
 Step 1: CHOLESKY FACTORIZATION
         Compute M = LLᵀ (L is lower-triangular)
-        Cost: O(N³) dense, O(N^{3/2}) for 2D sparse meshes
+        Cost: O(N) for 1D banded chains; O(N^{3/2}) for 2D sparse meshes (nested dissection); O(N³) dense worst case
 
 Step 2: WHITENING (transform to standard eigenvalue problem)
         Compute A = L⁻¹ K L⁻ᵀ (via triangular solves, not explicit inverse)
@@ -541,18 +543,25 @@ As qubit count grows, the gradient variance of a randomly initialized circuit de
 
 | Qubits | Gradient variance (uniform init) | Gradient variance (near-identity init) |
 |--------|------|------|
-| 2 | 2.62×10⁻² | 6.14×10⁻⁴ |
-| 3 | 1.05×10⁻² | 1.41×10⁻⁴ |
-| 4 | 5.34×10⁻³ | 1.96×10⁻⁴ |
-| 5 | 2.92×10⁻³ | 5.11×10⁻⁵ |
-| 6 | 1.97×10⁻³ | 5.91×10⁻⁵ |
+| 2 | 2.62×10⁻² | 4.05×10⁻⁴ |
+| 3 | 1.09×10⁻² | 8.87×10⁻⁴ |
+| 4 | 4.51×10⁻³ | 1.36×10⁻⁴ |
+| 5 | 3.47×10⁻³ | 3.26×10⁻⁵ |
+| 6 | 2.22×10⁻³ | 1.53×10⁻⁵ |
 | 7 | 1.59×10⁻³ | 3.14×10⁻⁵ |
+| 8 | 2.04×10⁻³ | 2.23×10⁻⁵ |
+| 9 | 9.82×10⁻⁴ | 1.97×10⁻⁵ |
+| 10 | 1.05×10⁻³ | 8.76×10⁻⁶ |
+| 11 | 1.12×10⁻³ | 2.22×10⁻⁵ |
+| 12 | 9.82×10⁻⁴ | 1.52×10⁻⁵ |
 
-The gradient is shrinking. If it decays exponentially (as theoretical results suggest for deep random circuits), then for large n, the optimizer sees a completely flat landscape and cannot make progress.
+The gradient shrinks for the first few qubits, then **flattens near 10⁻³** rather than continuing to fall. A barren plateau is *defined* by gradient variance decaying **exponentially** in qubit count; the test is whether `log V` falls linearly in `n_q` (exponential) or in `log n_q` (polynomial).
 
-**CS analogy:** This is exactly the vanishing gradient problem that plagued deep neural networks before ResNets and batch normalization. The quantum computing community hasn't found its equivalent fix yet.
+**What the extended study (2–12 qubits) finds:** a **power law fits far better than an exponential** — full-range R²=0.96 vs 0.83 (favouring the power law by ΔAIC≈15); over the small-system-free range (n_q≥4) the advantage narrows to R²=0.90 vs 0.85 (ΔAIC≈4, moderate). A linear fit to the tail (n_q≥7) gives a shallow slope of −0.12/qubit (95% CI [−0.23, −0.01]) — statistically nonzero but far below the exponential rate that defines a barren plateau. So the gradients keep shrinking, but at an **approximately polynomial, not exponential, rate.**
 
-**Honest caveat from the paper:** 2-7 qubits is too small to prove exponential decay. The trend is concerning but not conclusive.
+**CS analogy:** akin to the vanishing-gradient problem in deep nets before ResNets/batchnorm — but here, over the tested range, the decay looks polynomial rather than the exponential collapse a true barren plateau would show.
+
+**Honest caveat from the paper:** n_q ≤ 12 is still far from asymptotic, so this does **not** rule out a barren plateau emerging at larger scale — it only shows no exponential signature over the accessible range.
 
 ---
 
@@ -793,7 +802,7 @@ R = (n_q, N_P, N_G, N_shot, N_eval, D_circ, N_2q,
 | D_circ | Circuit depth | 2 (for exact recovery) |
 | N_2q | Two-qubit gates per circuit | 6 (CNOT ring × depth) |
 | C_asm | Classical assembly cost | O(N) for sparse structures |
-| C_chol | Cholesky factorization cost | O(N³) dense |
+| C_chol | Cholesky factorization cost | O(N) banded (1D chains); O(N^{3/2}) 2D; O(N³) dense |
 | C_bound | Spectral bound computation | O(N²) for Gershgorin |
 | C_Pauli | Pauli decomposition cost | O(4ⁿ · N) naively |
 | C_prep | State preparation cost | O(N) gates worst case |
@@ -854,7 +863,7 @@ Rather than training on noisy, shifted data from the start and not knowing which
 
 1. **Global convergence of the optimizer** — The cost function is nonconvex. No guarantee that gradient descent finds the global minimum. (This is the same as the open question of whether SGD finds global minima in deep learning.)
 
-2. **Barren plateaus** — The paper cannot prove or disprove exponential gradient decay at these qubit counts (2-7 is too small).
+2. **Barren plateaus** — Still cannot prove/disprove an *asymptotic* barren plateau, but the extended 2–12 qubit study finds the gradient variance decaying *polynomially*, not exponentially (power law beats exponential, ΔAIC≈15 full-range), i.e. no barren-plateau signature over the accessible range; 12 qubits is still not asymptotic.
 
 3. **Any quantum advantage** — The paper explicitly states: "These results do not establish quantum advantage."
 
@@ -880,8 +889,8 @@ This is deliberately weaker than an impossibility result. It's saying: "We can't
 
 ```
 TOTAL QUANTUM COST ≈ 
-    Classical preprocessing (O(N³) for Cholesky)
-  + Pauli decomposition (grows with density of A)
+    Classical preprocessing (banded Cholesky O(N) for 1D chains)
+  + Whitening + Pauli decomposition (densifies A → O(N²) terms)
   + Per mode: shots × Pauli_terms × optimizer_iterations
   + Mode recovery (O(N²) for back-transformation)
 ```
@@ -894,14 +903,14 @@ CLASSICAL LANCZOS COST ≈ O(k · nnz(K) · iterations)
 
 For a sparse 1D chain with nnz = O(N), finding k modes costs O(N·k·iter).
 
-The quantum approach:
-- Preprocessing alone (O(N³)) already exceeds the classical total cost
-- Even if preprocessing were free, O(N²) Pauli terms × O(1/ε²) shots per term = O(N²/ε²) per mode
+The quantum approach (corrected — preprocessing is *not* the dominant term for 1D chains):
+- The banded Cholesky is only O(N); it is the *whitening + Pauli construction* that hurts — it densifies A and produces O(N²) Pauli terms. Merely building and storing that operator is Θ(N²), already more than the entire classical solve for large N, before a single shot.
+- Then measurement: O(N²) Pauli terms × O(1/ε²) shots per term = O(N²/ε²) per mode
 - Classical: O(N·k) total
 
 ### 12.3 The Five Bottlenecks, Ranked
 
-1. **Preprocessing (Cholesky whitening):** O(N³) classical cost that must be paid regardless. This alone makes the quantum approach slower than classical Lanczos for sparse systems.
+1. **Whitening-induced densification (operator construction):** the banded Cholesky itself is only O(N), but whitening densifies the operator and building its Pauli representation is Θ(N²) in both time and space — already more than the entire classical solve for large N, before any measurement. (An earlier draft mislabeled this as O(N³) Cholesky; that dense cost does not apply to the 1D banded chains the paper studies.)
 
 2. **Pauli term count (measurement cost):** Grows as ~O(N²) for consistent mass. Each term needs separate measurements. Destroys the log(N) qubit advantage.
 
@@ -1013,17 +1022,17 @@ Verifies:
 
 **Question:** For a 1D chain with consistent mass and Cholesky whitening, is the number of nonzero Pauli terms Θ(N²)?
 
-**What's known:** Empirically it looks quadratic. The paper shows 10 → 136 → 1241 → 2950 for N = 4, 16, 64, 128. But no proof.
+**What's known:** The paper shows 10 → 136 → 1241 → 2950 for N = 4, 16, 64, 128. An independent recompute (`scratchpad/verify_complexity.py`) fits a *local* log-log slope of **≈1.4–1.5** over this range — i.e. **sub-quadratic**, so O(N²) is a worst-case *upper bound* (4^{n_q} ≤ 4N²), not a tight law. Whether the true asymptotic exponent is 2 (constant limiting density) or 2−α (density decaying as 1/N^α) is still unproven.
 
 **Approach:** The Pauli term count equals the number of nonzero entries in the matrix A when expressed in the computational basis (roughly). Since consistent-mass whitening fills A to ~30% density at N=128, and density × N² = nonzeros, the Pauli count should be O(density × N²). If density converges to a constant, it's Θ(N²). If density decays as 1/N^α, it's O(N^{2-α}).
 
 ### 16.2 Write the End-to-End Complexity
 
-**Assemble:**
+**Status: now done in the paper** — this is `tab:complexity` (Table 1) in Section VI, with a worked 128-DOF example (`tab:concrete`). Corrected sketch (banded 1D chain):
 ```
-T_quantum(N, k, ε) = O(N³)                    [Cholesky]
-                   + O(4^{log N} · N)          [Pauli decomposition]
-                   + k · N_P · shots · iters   [VQE per mode]
+T_quantum(N, k, ε) = O(N)                     [banded Cholesky, 1D chains]
+                   + O(N² log N)              [whitening + Pauli decomposition]
+                   + k · N_P · shots · iters   [VQE per mode, N_P = O(N²)]
                    + k · O(N²)                 [recovery]
 ```
 
@@ -1050,4 +1059,4 @@ This would be a formal separation result (conditional on the encoding choice).
 
 ## Part 17: One-Paragraph Summary
 
-A quantum computer can store a structural eigenvector in log(N) qubits, but actually computing that eigenvector requires: (1) O(N³) classical preprocessing to transform the two-matrix problem into a one-matrix problem, which can destroy the sparsity that makes classical algorithms fast; (2) circuit depth that must grow proportionally to N/log(N), not just log(N); (3) a deflation penalty for finding multiple eigenvalues that must be set precisely — the paper proves the exact necessary-and-sufficient threshold and shows that overshooting amplifies errors from imperfect prior modes; (4) O(N²) Pauli measurements in the worst case for consistent mass; and (5) approximately 3.7×10¹⁰ total circuit shots to make a practical engineering decision (damage localization) at 10% damage severity. Classical Lanczos solves the same problem in O(N·k) time for sparse systems. The quantum approach is currently far worse, and this paper identifies exactly where each bottleneck lies, with theorems and controlled experiments, rather than making vague claims about potential future advantage.
+A quantum computer can store a structural eigenvector in log(N) qubits, but actually computing that eigenvector requires: (1) classical preprocessing that is itself cheap for a banded 1D chain (O(N) Cholesky) but destroys the sparsity via whitening — densifying the operator so that merely building its O(N²) Pauli representation can cost more than solving the problem classically; (2) circuit depth that must grow proportionally to N/log(N), not just log(N); (3) a deflation penalty for finding multiple eigenvalues that must be set precisely — the paper proves the exact necessary-and-sufficient threshold and shows that overshooting amplifies errors from imperfect prior modes; (4) O(N²) Pauli measurements in the worst case for consistent mass; and (5) approximately 3.7×10¹⁰ total circuit shots to make a practical engineering decision (damage localization) at 10% damage severity. Classical Lanczos solves the same problem in O(N·k) time for sparse systems. The quantum approach is currently far worse, and this paper identifies exactly where each bottleneck lies, with theorems and controlled experiments, rather than making vague claims about potential future advantage.
