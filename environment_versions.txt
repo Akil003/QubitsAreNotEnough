@@ -1,14 +1,58 @@
 Tested environment
 ==================
-Python 3.13.5
+Python 3.12.3
 NumPy 2.3.5
 SciPy 1.17.0
 pandas 2.2.3
 Matplotlib 3.10.8
-LaTeX engine: pdfTeX (TeX Live installation in the build environment)
+LaTeX engine: pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)
 Bibliography processor: BibTeX
 
-Note: the trainability sweep (gradient_trainability.csv and its figure) was
-extended to 12 qubits and regenerated on Python 3.12.3. That study is
-deterministic (fixed seed, exact state vectors, no optimizer) and reproduces the
-original 3.13.5 values to ~1e-13; all other outputs remain the original 3.13.5 run.
+Provenance
+----------
+All outputs were produced under the environment above, by running, in order:
+
+    python reproduce_study.py
+    python revision_study.py
+    python minor_revision_study.py
+    python dimension_generalization/mesh_dimension_study.py
+
+The last script takes about a minute and must run after revision_study.py, on whose
+hamiltonian_scaling.csv it depends for the 1D comparison curve; it is the source of
+Table 5 and two manuscript figures. Its outputs under dimension_generalization/data/
+carry an earlier date than the rest: they are deterministic linear algebra and were
+re-verified column by column against a fresh run rather than being rewritten, so the
+files are current in content even though their timestamps are older.
+
+An earlier release of this package mixed outputs from Python 3.13.5 and 3.12.3. That
+mixed provenance no longer applies.
+
+Reproducibility
+---------------
+Deterministic results reproduce exactly. Eigenvalues, Pauli coefficients and counts,
+transformed densities, Gershgorin ratios, the deflation-threshold sweep, the
+Davis-Kahan perturbation table, the QWC measurement floor, and the delta-method shot
+requirements were all confirmed bit-identical, or identical to within 1e-12, against an
+independently produced run.
+
+Monte Carlo results depend on the ORDER of the Pauli term list, because each term draws
+one binomial from a single shared numpy Generator in sample_prepared. The term list is
+produced by pauli_coefficients, which sorts by |coefficient|. Several benchmarks here
+contain exactly tied magnitudes -- the six-DOF Hamiltonian has two groups of four -- and
+a non-stable sort breaks those ties differently across environments, which silently
+shifted every Monte Carlo figure by up to about 12 percent. Both pauli_coefficients and
+pauli_decomposition therefore now sort with kind="stable" over the deterministic
+itertools.product generation order, which fixes the term list and removes this source of
+variation. Note that the seed is never the variable: numpy guarantees that Generator
+reproduces the same stream for a given seed across versions and platforms.
+
+Two smaller sources of run-to-run variation remain and are not fixable by seeding:
+
+  * L-BFGS-B follows a slightly different path on different BLAS builds, so the
+    optimizer-limited entries of the depth study (the near-zero frequency errors) can
+    move by a factor of a few. The expressibility-limited entries, which carry the
+    scientific claim, are stable to five significant figures.
+  * Reported wall-clock timings are machine-specific by nature.
+
+validate_outputs.py asserts tight tolerances on the deterministic quantities and the
+per-seed restart study, and uses wide bands on the two stochastic checks.

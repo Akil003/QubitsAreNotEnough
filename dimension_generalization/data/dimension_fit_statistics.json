@@ -1,0 +1,9 @@
+{
+  "pauli_exponent_1D_full_range": 1.6599951548421035,
+  "n_points_1D": 6,
+  "pauli_exponent_2D_full_range": 1.6922444106559489,
+  "n_points_2D": 4,
+  "pauli_exponent_3D_full_range": 1.79370285017639,
+  "n_points_3D": 3,
+  "pauli_exponent_1D_n_ge_16": 1.475204625037524
+}

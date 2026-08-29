@@ -159,11 +159,29 @@ def solve_vqd(
     starts: int = 8,
     seed: int = 12,
     maxiter: int = 450,
+    beta_schedule: Callable[[int, int, list[float], list[float]], float] | None = None,
 ) -> VQDResult:
+    """Sequential VQD.
+
+    ``beta`` applies one common deflation penalty to every previously extracted
+    state. Passing ``beta_schedule(r, j, energies, variances) -> float`` instead
+    supplies a per-pair penalty, which is what the certified rule of Algorithm 1
+    requires; ``beta`` is then ignored. ``energies`` and ``variances`` hold the
+    already-extracted modes ``0..r-1``, so a schedule can implement
+    ``beta_j = U_r - eps_hat_j + delta_j + tau`` from quantities the run itself
+    produces. With ``beta_schedule=None`` the arithmetic is unchanged.
+    """
     n_qubits = int(round(np.log2(H.shape[0])))
     circuit = RealAmplitudeCircuit(n_qubits, depth)
-    H2 = H @ H
     rng = np.random.default_rng(seed)
+
+    def _variance(y: np.ndarray, energy: float) -> float:
+        # sigma_H^2 = ||(H - E)psi||^2, eq. (variance). Computing it as
+        # <H^2> - <H>^2 instead is a difference of two O(1) quantities and loses
+        # every significant digit near an eigenvector -- it returns small negative
+        # numbers there, which then have to be clamped. This form does not.
+        r = H @ y - energy * y
+        return float(r @ r)
     states: list[np.ndarray] = []
     eigenvalues: list[float] = []
     variances: list[float] = []
@@ -172,6 +190,11 @@ def solve_vqd(
     iterations: list[int] = []
 
     for mode in range(n_modes):
+        # None keeps the original single-penalty arithmetic bit-for-bit.
+        weights = None if beta_schedule is None else [
+            float(beta_schedule(mode, j, eigenvalues, variances))
+            for j in range(len(states))
+        ]
         best: tuple[float, float, float, float, float, int, np.ndarray] | None = None
         for _ in range(starts):
             x0 = rng.uniform(-np.pi, np.pi, circuit.n_parameters)
@@ -179,9 +202,12 @@ def solve_vqd(
             def objective(x: np.ndarray) -> float:
                 y = circuit.state(x)
                 energy = float(y @ H @ y)
-                variance = float(y @ H2 @ y - energy**2)
-                deflation = sum(float(y @ p) ** 2 for p in states)
-                return energy + gamma * max(variance, 0.0) + beta * deflation
+                variance = _variance(y, energy)
+                if weights is None:
+                    deflation = beta * sum(float(y @ p) ** 2 for p in states)
+                else:
+                    deflation = sum(w * float(y @ p) ** 2 for w, p in zip(weights, states))
+                return energy + gamma * variance + deflation
 
             res = minimize(
                 objective,
@@ -191,7 +217,7 @@ def solve_vqd(
             )
             y = circuit.state(res.x)
             energy = float(y @ H @ y)
-            variance = float(max(y @ H2 @ y - energy**2, 0.0))
+            variance = _variance(y, energy)
             max_overlap = max([float(y @ p) ** 2 for p in states] or [0.0])
             pad = float(np.sum(y[physical_dim:] ** 2))
             record = (objective(res.x), energy, variance, max_overlap, pad, int(res.nit), y)
@@ -260,7 +286,11 @@ def pauli_decomposition(H: np.ndarray, tol: float = 1e-12) -> pd.DataFrame:
         coeff = np.trace(P.conj().T @ H) / (2**n)
         if abs(coeff) > tol:
             rows.append({"pauli": "".join(labels), "coefficient": float(np.real_if_close(coeff).real)})
-    return pd.DataFrame(rows).sort_values("coefficient", key=lambda x: np.abs(x), ascending=False)
+    # kind="stable": see the matching note in revision_study.pauli_coefficients. Tied
+    # |coefficient| values are common here and a non-stable sort makes the term order,
+    # and therefore any downstream sampling, environment-dependent.
+    return pd.DataFrame(rows).sort_values("coefficient", key=lambda x: np.abs(x),
+                                          ascending=False, kind="stable")
 
 
 def relative_residual(K: np.ndarray, M: np.ndarray, phi: np.ndarray, lam: float) -> float:
@@ -394,14 +424,17 @@ def main() -> None:
     pauli.to_csv(DATA / "pauli_decomposition.csv", index=False)
 
     # Modal strain-energy damage index using first four modes.
+    # Both epochs use the BASELINE element stiffnesses in the numerator; only the state
+    # and the current global K enter otherwise. This is the convention of eq. (mse) and
+    # the only deployable one -- see revision_study.damage_shot_study.
     eta0_exact = modal_strain_energy_fractions(baseline["Phi_exact"][:, :4], baseline_model.K, baseline_model.Ke)
-    etad_exact = modal_strain_energy_fractions(damaged["Phi_exact"][:, :4], damaged_model.K, damaged_model.Ke)
+    etad_exact = modal_strain_energy_fractions(damaged["Phi_exact"][:, :4], damaged_model.K, baseline_model.Ke)
     DI_exact = np.sum(np.abs(etad_exact - eta0_exact), axis=1)
 
     phi0_q = baseline["methods"]["VQD L=2"]["Phi"][:, :4]
     phid_q = damaged["methods"]["VQD L=2"]["Phi"][:, :4]
     eta0_q = modal_strain_energy_fractions(phi0_q, baseline_model.K, baseline_model.Ke)
-    etad_q = modal_strain_energy_fractions(phid_q, damaged_model.K, damaged_model.Ke)
+    etad_q = modal_strain_energy_fractions(phid_q, damaged_model.K, baseline_model.Ke)
     DI_q = np.sum(np.abs(etad_q - eta0_q), axis=1)
 
     damage_df = pd.DataFrame({

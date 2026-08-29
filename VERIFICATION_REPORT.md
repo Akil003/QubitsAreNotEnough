@@ -1,5 +1,11 @@
 # Verification Report
 
+> **Scope.** This document records the original conversion of the manuscript to the TQE
+> template. The package has since been revised; see `notes/CORRECTNESS_REVIEW.md` for the
+> findings and the changes made in response, and `environment_versions.txt` for current
+> provenance. Facts below have been updated where the conversion-time statement no longer
+> holds.
+
 ## Source provenance
 
 The source manuscript was taken from `Qubits_Are_Not_Enough_Minor_Revision_Final(1).zip`, which contained the complete 26-page minor-revision manuscript, all three reproduction scripts, generated data, and a passing SHA-256 manifest. Reviewer-response documents and review reports were intentionally excluded from this TQE package.
@@ -8,10 +14,10 @@ The source manuscript was taken from `Qubits_Are_Not_Enough_Minor_Revision_Final
 
 - Converted to the user-supplied IEEE Transactions on Quantum Engineering `ieeeaccess` LaTeX template.
 - Article type prepared: Regular Article.
-- Final title: **Qubits Are Not Enough: Exact Deflation Conditions and Measurement Limits in Variational Quantum Modal Analysis**.
-- Author: Bikalpa Gautam.
+- Final title: **Qubits Are Not Enough: Deflation and Measurement Limits in Variational Quantum Modal Analysis**.
+- Authors: Bikalpa Gautam (ETH Zurich), Akil Raj Subedi (Zynga Inc.); corresponding author Bikalpa Gautam, `bgautam@ethz.ch`.
 - Affiliation: Department of Civil, Environmental and Geomatic Engineering, ETH Zurich, Zurich, Switzerland.
-- Abstract length: 217 words, within the 150-250 word template requirement.
+- Abstract length: 249 words, within the 150-250 word template requirement.
 - Keywords are alphabetized.
 - Bibliography uses `IEEEtran.bst` and numeric IEEE citations.
 - Reviewer-response language was removed from the standalone manuscript.
@@ -22,13 +28,17 @@ The source manuscript was taken from `Qubits_Are_Not_Enough_Minor_Revision_Final
 `validate_outputs.py` completed successfully and reported:
 
 ```text
-All citation and numerical integrity checks passed.
+All citation, numerical, and complexity integrity checks passed.
 ```
+
+Note that the tolerances on the two stochastic checks were subsequently widened; see the
+reproducibility note in `README.md` for why four-digit agreement is not achievable on
+Monte Carlo quantities.
 
 ## PDF checks
 
 - Compiled with pdfLaTeX, BibTeX, and two final pdfLaTeX passes.
-- 13 TQE-formatted pages.
+- 19 TQE-formatted pages.
 - PDF is unencrypted, text-based, and openable with PyMuPDF.
 - All pages were rendered and visually inspected.
 - Wide measurement and shot-requirement tables were converted to full-width IEEE floats to prevent overlap.
@@ -37,4 +47,4 @@ All citation and numerical integrity checks passed.
 
 ## Remaining author-controlled item
 
-The official ETH email address was not guessed. The manuscript identifies Bikalpa Gautam as corresponding author without printing an email. The submission portal will collect the email; add it to the `\\corresp{...}` line if you want it printed in the PDF.
+The corresponding-author address `bgautam@ethz.ch` is now printed on the `\corresp{...}` line. Confirm it is the address you want to appear before final upload.

@@ -1,0 +1,24 @@
+# Python environment and caches
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# LaTeX build artifacts. Note that Qubits_Are_Not_Enough_TQE.bbl is deliberately
+# tracked: it is listed in MANIFEST.sha256 and ships with the submission.
+*.aux
+*.blg
+*.log
+*.out
+
+# Alternate-class build, produced on demand by `make manuscript-tqe`.
+# See the Compile section of README.md.
+Qubits_Are_Not_Enough_TQE_IEEEtran.pdf
+Qubits_Are_Not_Enough_TQE_IEEEtran.bbl
+
+# Intermediate figure directories. The study scripts write here and then copy the
+# results into figures/, which is what the manuscript reads and what is manifested.
+revision_figures/
+dimension_generalization/figures/

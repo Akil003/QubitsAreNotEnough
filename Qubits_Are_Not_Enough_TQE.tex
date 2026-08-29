@@ -1,4 +1,19 @@
-\documentclass{ieeeaccess}
+% To build the IEEE TQE (IEEEtran) layout in an editor that cannot pass a
+% command-line argument -- Overleaf, TeXShop, TeXstudio -- just uncomment the
+% next line. Leave it commented for the IEEE Access layout.
+% \def\TQE{}
+%
+% ---------------------------------------------------------------------------
+% Two journal targets from one source. The body is shared verbatim; only the
+% front matter below branches.
+%   make manuscript      -> IEEE Access layout   (ieeeaccess.cls)
+%   make manuscript-tqe  -> IEEE TQE layout      (IEEEtran.cls)
+% ---------------------------------------------------------------------------
+\ifdefined\TQE
+  \documentclass[journal]{IEEEtran}
+\else
+  \documentclass{ieeeaccess}
+\fi
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools,bm}
 \usepackage{algorithm}
@@ -35,6 +50,7 @@
 \newcommand{\Var}{\operatorname{Var}}
 \newcommand{\diag}{\operatorname{diag}}
 \newcommand{\MAC}{\operatorname{MAC}}
+\newcommand{\epoch}{\mathrm{ep}}
 \newcommand{\argmin}{\operatorname*{arg\,min}}
 \newcommand{\argmax}{\operatorname*{arg\,max}}
 \newtheorem{theorem}{Theorem}
@@ -43,23 +59,41 @@
 \newtheorem{remark}{Remark}
 \newtheorem{definition}{Definition}
 
+\ifdefined\TQE
+  % IEEEtran spells these two differently; nothing in the body changes.
+  \newcommand{\PARstart}{\IEEEPARstart}
+  \newenvironment{keywords}{\begin{IEEEkeywords}}{\end{IEEEkeywords}}
+\fi
+
 \crefname{figure}{Fig.}{Figs.}
 \Crefname{figure}{Fig.}{Figs.}
 \crefname{table}{Table}{Tables}
 \Crefname{table}{Table}{Tables}
 \crefname{algorithm}{Algorithm}{Algorithms}
 \Crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{remark}{Remark}{Remarks}
+\Crefname{remark}{Remark}{Remarks}
+\crefname{proposition}{Proposition}{Propositions}
+\Crefname{proposition}{Proposition}{Propositions}
 \crefname{section}{Section}{Sections}
 \Crefname{section}{Section}{Sections}
 
 \begin{document}
+\ifdefined\TQE\else
 \history{}
 \doi{}
 \vol{7}
 \year{2026}
+\fi
 
 \title{Qubits Are Not Enough: Deflation and Measurement Limits in Variational Quantum Modal Analysis}
 
+\ifdefined\TQE
+\author{Bikalpa~Gautam and Akil~Raj~Subedi%
+\thanks{B. Gautam is with the Department of Civil, Environmental and Geomatic
+Engineering, ETH Zurich, 8093 Zurich, Switzerland (e-mail: bgautam@ethz.ch).}%
+\thanks{A. R. Subedi is with Zynga Inc., Bangalore, India.}}
+\else
 \author{\uppercase{Bikalpa Gautam}\authorrefmark{1}, \uppercase{Akil Raj Subedi}\authorrefmark{2}}
 \address[1]{Department of Civil, Environmental and Geomatic Engineering, ETH Zurich, 8093 Zurich, Switzerland}
 \address[2]{Zynga Inc., Bangalore, India}
@@ -69,22 +103,27 @@
 {B. Gautam and A. R. Subedi: Qubits Are Not Enough: Deflation and Measurement Limits}
 
 \corresp{Corresponding author: Bikalpa Gautam (bgautam@ethz.ch)}
+\fi
+
+\ifdefined\TQE\maketitle\fi
 
 \begin{abstract}
-Amplitude encoding stores an $N$-degree-of-freedom structural mode using $\lceil\log_2 N\rceil$ qubits, but compact encoding does not by itself make quantum modal analysis reliable or scalable. This article develops a rigorous evaluation framework for variational quantum eigensolvers applied to finite-element structural dynamics. A Cholesky transformation maps the generalized eigenproblem to a symmetric mass-orthonormal Hamiltonian, so Euclidean quantum-state orthogonality is identical to structural mass orthogonality. A two-scale normalization separates optimizer conditioning from spectrally safe padding. For higher modes, a necessary-and-sufficient deflation condition determines when the requested mode is the unique ground state, and a Davis--Kahan bound quantifies the effect of approximate lower-mode projectors. Numerical studies separate mapping correctness, ansatz expressibility, preprocessing, Pauli measurement growth, finite-shot frequency uncertainty, and damage localization. For structural chains with up to 128 degrees of freedom, consistent-mass whitening increases transformed-operator density from 0.023 to 0.308 and nonzero Pauli terms from 576 to 2950; a two- and three-dimensional generalization shows this densification worsens, and is delayed to larger problem sizes, as spatial dimension increases, and validates a subspace diagnostic against a genuine degenerate mode pair unreachable in one dimension. Exact state-vector experiments show that qubit count and circuit expressibility are distinct: shallow circuits fail even when the state dimension fits. At $10^5$ shots per Pauli term, the first-mode frequency root-mean-square error remains 2.23\%, while a 10\% stiffness loss is localized correctly in 26\% of trials. The results establish exact deflation conditions and engineering validation criteria, quantify major resource bottlenecks, and make no claim of quantum speedup.
+Amplitude encoding stores an $N$-degree-of-freedom structural mode using $\lceil\log_2 N\rceil$ qubits, but compact encoding does not by itself make quantum modal analysis reliable or scalable. This article develops a rigorous evaluation framework for variational quantum eigensolvers applied to finite-element structural dynamics. A Cholesky transformation maps the generalized eigenproblem to a symmetric mass-orthonormal Hamiltonian, so Euclidean quantum-state orthogonality is identical to structural mass orthogonality. A two-scale normalization separates optimizer conditioning from spectrally safe padding. For higher modes, the known deflation penalty condition is sharpened to a necessary-and-sufficient threshold, and a Davis--Kahan bound quantifies the effect of approximate lower-mode projectors. Numerical studies separate mapping correctness, ansatz expressibility, preprocessing, Pauli measurement growth, finite-shot frequency uncertainty, and damage localization. For structural chains with up to 128 degrees of freedom, consistent-mass whitening increases transformed-operator density from 0.023 to 0.308 and nonzero Pauli terms from 576 to 2950; a two- and three-dimensional generalization shows this densification worsening, and appearing later in $N$, as spatial dimension increases, and validates a subspace diagnostic against a genuine degenerate mode pair unreachable in one dimension. Exact state-vector experiments show that qubit count and circuit expressibility are distinct: shallow circuits fail even when the state dimension fits. At $10^5$ shots per Pauli term, the first-mode frequency root-mean-square error remains 2.45\% and a 10\% stiffness loss is localized in 84.5\% of trials, but certified localization on a six-DOF benchmark needs ${\approx}10^{8}$ circuit executions. The results sharpen the deflation condition, give validation criteria, quantify resource bottlenecks, and claim no quantum speedup.
 \end{abstract}
 
 \begin{keywords}
 Finite-element eigenproblems, measurement complexity, structural dynamics, variational quantum eigensolvers.
 \end{keywords}
 
+\ifdefined\TQE\else
 \titlepgskip=-15pt
 \maketitle
+\fi
 
 \section{Introduction}
 \label{sec:intro}
 
-\PARstart{M}{odal} analysis underlies seismic response, wind and pedestrian serviceability, reduced-order simulation, operational modal analysis, finite-element model updating, and vibration-based structural health monitoring \cite{Chopra2020,Ewins2000,FarrarWorden2012}. For a structure with $N$ unconstrained degrees of freedom (DOFs), the low-frequency modes solve
+\PARstart{M}{odal} analysis underlies seismic response, wind and pedestrian serviceability, reduced-order simulation, operational modal analysis, finite-element model updating, and vibration-based structural health monitoring \cite{Chopra2020,Ewins2000,FarrarWorden2007,FarrarWorden2012}. For a structure with $N$ unconstrained degrees of freedom (DOFs), the low-frequency modes solve
 \begin{equation}
 \K\ph_i=\lambda_i\M\ph_i,
 \qquad \lambda_i=\omega_i^2,
@@ -93,7 +132,7 @@ Finite-element eigenproblems, measurement complexity, structural dynamics, varia
 \end{equation}
 Classical Lanczos, subspace-iteration, and contour-based eigensolvers are mature and highly effective. A quantum method must therefore be evaluated against physical residuals, modal orthogonality, measurement cost, state-preparation cost, and end-to-end preprocessing, not against matrix dimension alone.
 
-The variational quantum eigensolver (VQE) minimizes an expectation-valued Rayleigh quotient over a parameterized quantum state \cite{Peruzzo2014,McClean2016}. Excited-state extensions include variational quantum deflation (VQD) \cite{Higgott2019} and subspace-search VQE \cite{Nakanishi2019}. Generalized eigenvalue formulations have been developed for finite-element problems \cite{Sato2023}, and structural demonstrations have coupled finite-element software with VQE on simulators and small processors \cite{Liu2024}. More recently, Taliadouros et al.\ used SSVQE and VQD inside Monte Carlo simulation to estimate multiple eigenvalue statistics of stochastic structural systems, including a proof-of-concept execution on IBM Sherbrooke \cite{Taliadouros2025}. Accordingly, neither the classical Cholesky reduction nor the use of VQD/SSVQE for multiple structural eigenvalues is claimed as new here. The contribution relative to this literature is the exact deflation threshold, the approximate-projector perturbation analysis, the separation of padding certification from optimizer scaling, and end-to-end accounting of whitening, Pauli, finite-shot, and damage-decision costs. Existing studies establish feasibility, but do not by themselves establish scalable structural utility.
+The variational quantum eigensolver (VQE) minimizes an expectation-valued Rayleigh quotient over a parameterized quantum state \cite{Peruzzo2014,McClean2016}, and is among the most studied near-term algorithms \cite{Preskill2018,Cerezo2021,Tilly2022}. Excited-state extensions include variational quantum deflation (VQD) \cite{Higgott2019} and subspace-search VQE \cite{Nakanishi2019}. Generalized eigenvalue formulations have been developed for finite-element problems \cite{Sato2023}, and structural demonstrations have coupled finite-element software with VQE on simulators and small processors \cite{Liu2024}. More recently, Taliadouros et al.\ used SSVQE and VQD inside Monte Carlo simulation to estimate multiple eigenvalue statistics of stochastic structural systems, including a proof-of-concept execution on IBM Sherbrooke \cite{Taliadouros2025}. Accordingly, neither the classical Cholesky reduction nor the use of VQD/SSVQE for multiple structural eigenvalues is claimed as new here. Higgott et al.\ already introduce the deflated cost \cref{eq:deflatedH} and observe that $\beta_j>\varepsilon_r-\varepsilon_j$ suffices to expose the target mode \cite{Higgott2019}; that sufficiency condition is theirs, not ours. The contribution relative to this literature is the converse, showing the condition is also necessary and extending it to the padded spectrum; the deterministic certified penalty rule; the identification of the penalty that minimizes the approximate-projector certificate; the separation of padding certification from optimizer scaling; and end-to-end accounting of whitening, Pauli, finite-shot, and damage-decision costs. Existing studies establish feasibility, but do not by themselves establish scalable structural utility.
 
 The central premise of this paper is summarized by its title: logarithmic qubit count is not sufficient. A usable structural modal solver must address six distinct questions:
 \begin{enumerate}[label=(\roman*)]
@@ -105,16 +144,18 @@ The central premise of this paper is summarized by its title: logarithmic qubit 
 \item Can repeated monitoring distinguish genuine structural change from numerical mode swapping without biasing the eigensolution?
 \end{enumerate}
 
-The contributions are:
+The contributions below are stated as demonstrated results. Each is either proved or measured in this paper; where a component is proposed but not evaluated, it is named separately afterwards rather than counted here.
 \begin{enumerate}[label=(\roman*)]
-\item a mass-orthonormal Cholesky mapping and explicit accounting of its classical cost and sparsity consequences;
-\item a two-scale spectral normalization that decouples optimizer scaling from certified safe padding;
-\item an exact deflation theorem, a deterministic penalty-selection rule, and a perturbation bound for approximate projectors;
-\item a lexicographic eigensolver that removes unjustified weighted sums of energy, variance, and leakage;
-\item unbiased post-hoc temporal mode tracking based on uncertainty-normalized assignment, rather than continuity penalties in the eigensolver;
-\item quantified Pauli, grouping, trainability, finite-shot, and damage-localization studies extending beyond a single three-qubit demonstration;
-\item a two- and three-dimensional generalization showing that densification worsens, and is delayed to larger $N$, with spatial dimension, together with a degeneracy-diagnostic validation unreachable in one dimension.
+\item a mass-orthonormal Cholesky mapping, with explicit accounting of its classical cost and of the sparsity it destroys;
+\item a two-scale spectral normalization that decouples the optimizer scale from certified safe padding;
+\item for higher modes, the converse to the known variational-deflation threshold---showing the condition is necessary as well as sufficient---its extension to the padded spectrum, a deterministic certified penalty rule, and the identification of the penalty $\beta_j^\star$ that minimizes the approximate-projector certificate, which is not the smallest admissible one;
+\item an exact closed form for the nonzero Pauli count of a lumped-mass mesh, $(n_q+2)2^{\,n_q-1}$, with a checkable necessary-and-sufficient condition for it to be attained, showing that the quadratic measurement bound is reached only through the mass model;
+\item end-to-end resource accounting---whitening, Pauli growth, commuting groups, state preparation, finite-shot frequency uncertainty, and damage-decision cost---extending beyond a single three-qubit demonstration;
+\item evidence that expressibility and trainability are in tension for this ansatz family: gradient concentration reaches the barren-plateau rate at depths still far below the depth expressibility requires;
+\item a two- and three-dimensional generalization showing that densification worsens, and appears later in $N$, with spatial dimension, together with a degeneracy-diagnostic validation unreachable in one dimension.
 \end{enumerate}
+
+Two further procedures are developed but deliberately not claimed above, because neither is evaluated experimentally: the lexicographic refinement of \cref{sec:deflation}, which replaces weighted sums of energy, variance and leakage by a constrained problem, and the post-hoc temporal mode-tracking rule of \cref{sec:observables}, which assigns mode labels after independent eigensolution instead of through continuity penalties inside it. They are included because the evaluation framework is incomplete without them, not as validated results.
 
 \Cref{fig:workflow} summarizes the end-to-end pipeline analyzed in the rest of the paper.
 
@@ -208,7 +249,7 @@ Sparsity of $\M$ and $\K$ does not imply sparsity of $\A$. When $\M$ is diagonal
 \delta_A(\tau)=\frac{1}{N^2}\#\{(i,j):|A_{ij}|>\tau\norm{\A}_{\max}\}.
 \label{eq:density}
 \end{equation}
-The transformed density $\delta_A$ is therefore an algorithmic observable, not a minor implementation detail.
+The transformed density $\delta_A$ is therefore an algorithmic observable, not a minor implementation detail. Every density reported in this paper uses $\tau=10^{-12}$.
 
 A generalized Rayleigh quotient can avoid explicit whitening,
 \begin{equation}
@@ -310,7 +351,7 @@ For target mode $r$, define the exact deflated operator
 \end{equation}
 
 \begin{theorem}[Necessary and sufficient deflation threshold]
-Assume $\varepsilon_r<\varepsilon_{r+1}$, with $\varepsilon_{N+1}:=\alpha$. Then $|u_r\rangle$ is the unique ground state of $\Hq_r$ if and only if
+Assume $\varepsilon_r<\varepsilon_{r+1}$, with $\varepsilon_{N+1}:=\alpha$ when $D>N$ and $\varepsilon_{N+1}:=+\infty$ otherwise. Then $|u_r\rangle$ is the unique ground state of $\Hq_r$ if and only if
 \begin{equation}
 \boxed{\beta_j>\varepsilon_r-\varepsilon_j\quad\text{for all }j<r.}
 \label{eq:betathreshold}
@@ -320,6 +361,8 @@ Assume $\varepsilon_r<\varepsilon_{r+1}$, with $\varepsilon_{N+1}:=\alpha$. Then
 \begin{proof}
 The eigenvectors of $\Hq_r$ remain $|u_k\rangle$. For $k<r$, the corresponding eigenvalue is $\varepsilon_k+\beta_k$; for $k\ge r$, it is $\varepsilon_k$; padded states have eigenvalue $\alpha$. The target is the unique minimum precisely when every shifted lower eigenvalue exceeds $\varepsilon_r$ and $\varepsilon_{r+1},\alpha>\varepsilon_r$.
 \end{proof}
+
+The sufficiency direction is due to Higgott et al.\ \cite{Higgott2019}, who introduce the deflated cost \cref{eq:deflatedH} and note that $\beta_j>\varepsilon_r-\varepsilon_j$ suffices. What \cref{eq:betathreshold} adds is the converse---no smaller penalty works, so the condition is sharp---and the inclusion of the padded block through the convention $\varepsilon_{N+1}:=\alpha$, which matters because padding contributes eigenvalues that deflation must also clear.
 
 The theorem replaces an arbitrary common penalty with a spectral condition. If a certified target upper bound $U_r\ge\varepsilon_r$ and prior eigenvalue error bounds $|\widehat\varepsilon_j-\varepsilon_j|\le\delta_j$ are available, a deterministic sufficient choice is
 \begin{equation}
@@ -339,7 +382,7 @@ which requires no auxiliary classical eigensolve but can be conservative. Altern
 U_r^{(R)}=\vartheta_r^{(p)}+\delta_{\mathrm{fp}}
 \label{eq:ritzUr}
 \end{equation}
-is a tighter certified bound after allowing for floating-point error. A sparse $p$-step Lanczos/Ritz pass costs approximately $O(p\,\mathrm{nnz}(\A)+Np^2+p^3)$ arithmetic ($\mathrm{nnz}(\cdot)$ denoting the number of nonzero entries) and $O(Np)$ storage, and is therefore recorded explicitly as $C_{\mathrm{bound}}$ in the resource vector rather than treated as free preprocessing.
+is a tighter certified bound after allowing for floating-point error. Tighter is not automatically better here: by \cref{eq:betastar} a tighter $U_r$ combined with a small $\tau$ drives the deflated separation $g_r$ toward zero and the Davis--Kahan certificate toward vacuity, whereas the conservative Gershgorin policy \cref{eq:globalUr} overshoots the threshold and lands in the safe regime. A tight bound policy must therefore be paired with a $\tau$ of order $G_r$. A sparse $p$-step Lanczos/Ritz pass costs approximately $O(p\,\mathrm{nnz}(\A)+Np^2+p^3)$ arithmetic ($\mathrm{nnz}(\cdot)$ denoting the number of nonzero entries) and $O(Np)$ storage, and is therefore recorded explicitly as $C_{\mathrm{bound}}$ in the resource vector rather than treated as free preprocessing.
 
 For a previously extracted mode, a practical high-confidence error radius can combine an eigenstate residual and Pauli-sampling uncertainty:
 \begin{equation}
@@ -384,7 +427,19 @@ If $\norm{\Delta_r}_2<g_r/2$, Weyl's inequality preserves an isolated target eig
 }
 \label{eq:dkbound}
 \end{equation}
-Equation \eqref{eq:deflperturb} exposes the trade-off omitted by a heuristic penalty rule: a penalty must exceed the threshold, but an unnecessarily large penalty amplifies projector contamination. The recommended choice is therefore the smallest certified penalty satisfying \cref{eq:certbeta}, not indefinite adaptive growth.
+Equation \eqref{eq:deflperturb} is easily misread as an argument for the smallest admissible penalty, since $\norm{\Delta_r}_2$ grows linearly with $\beta_j$. That reading is incomplete, because $\beta_j$ also enters the denominator of \cref{eq:dkbound} through $g_r$. Write
+\begin{equation}
+G_r=\min(\varepsilon_{r+1}-\varepsilon_r,\ \alpha-\varepsilon_r)
+\label{eq:physgap}
+\end{equation}
+for the separation available from the physical spectrum. Then $g_r$ increases with $\beta_j$ until it saturates at $G_r$, so the certified bound is
+\begin{equation}
+\boxed{\text{minimized at }\ \beta_j^\star=(\varepsilon_r-\varepsilon_j)+G_r,}
+\label{eq:betastar}
+\end{equation}
+diverges as $\beta_j$ approaches the threshold from above, and grows only linearly beyond $\beta_j^\star$. The smallest certified penalty is therefore the \emph{worst} admissible choice, not the best: each penalty should be raised until the deflated separation saturates the physical gap, and not much further. In \cref{eq:certbeta} this corresponds to sizing the total excess $U_r-\varepsilon_r+\delta_j+\tau$ against $G_r$, rather than driving $\tau$ to zero.
+
+Two caveats attach to \cref{eq:betastar}. It locates the minimum of the \emph{certificate}, not of the error: in the perturbation experiment of \cref{sec:results} the measured target rotation continues to fall as $\beta_j$ is increased past $\beta_j^\star$, so \cref{eq:dkbound} is conservative in a $\beta$-dependent way. And $\beta_j^\star$ requires $\varepsilon_r$ and $G_r$, which are not available before the solve; the practical reading is that a conservative bound policy is safer than a tight one, not that the optimum can be hit exactly.
 
 \subsection{No arbitrary variance or leakage weights}
 
@@ -399,7 +454,7 @@ Padding leakage is
 \ell_p(\psi)=\langle\psi|P_{\mathrm{pad}}|\psi\rangle.
 \label{eq:leak}
 \end{equation}
-However, adding $\gamma\sigma_H^2+\zeta\ell_p$ to the energy creates uncalibrated trade-offs and changes the optimization landscape. The primary algorithm therefore uses only
+Variance has also been studied as an objective in its own right \cite{Zhang2022}; the difficulty here is not variance minimization but the additive combination. Adding $\gamma\sigma_H^2+\zeta\ell_p$ to the energy creates uncalibrated trade-offs and changes the optimization landscape. The primary algorithm therefore uses only
 \begin{equation}
 C_r(\theta)=\langle\psi(\theta)|\widehat\Hq_r|\psi(\theta)\rangle.
 \label{eq:primarycost}
@@ -416,7 +471,11 @@ An optional lexicographic refinement is
 \end{equation}
 This preserves the energy ordering within a declared tolerance rather than hiding the trade-off in application-defined weights.
 
-\begin{remark}[Scope of the guarantee]
+\begin{remark}[Degenerate and near-degenerate targets]\label{rem:degenerate}
+Theorem~1 assumes $\varepsilon_r<\varepsilon_{r+1}$, and \cref{eq:dkbound} requires $g_r>0$. Neither holds for a degenerate target, and \cref{sec:dim-degeneracy} exhibits a genuine pair with relative gap $2.2\times10^{-16}$ arising from nothing more exotic than a reflection symmetry. Symmetric geometries---square plates, circular tanks, regular framed buildings---make such pairs common rather than exceptional. For a repeated eigenvalue the projector $P_j$ is not basis-independent within the shared eigenspace, so sequential deflation cannot isolate an individual member at all; only the invariant subspace is well defined. Block deflation, replacing $\beta_jP_j$ by $\beta_j P_{\mathcal S_j}$ onto whole eigenspaces, is the natural generalization and is not developed here. This is the same failure mode that motivates the subspace diagnostic of \cref{eq:subspace}.
+\end{remark}
+
+\begin{remark}[Scope of the guarantee]\label{rem:scope}
 Theorem 1 identifies the correct ground state of the full deflated Hilbert-space operator. It does not prove global convergence of a finite-depth ansatz or a nonconvex classical optimizer. Ansatz approximation error and optimization failure are measured separately through restarts, residuals, and depth studies.
 \end{remark}
 
@@ -434,16 +493,17 @@ selects the mode nearest $\sigma$. These alternatives are useful when sequential
 
 A real structural Hamiltonian permits a real-amplitude circuit,
 \begin{equation}
-U_L(\theta)=\prod_{\ell=1}^{L}
-\left[U_{\mathrm{ent}}^{(\ell)}\prod_{q=1}^{n_q}R_y(\theta_{q\ell})\right]
-\prod_{q=1}^{n_q}R_y(\theta_{q0}).
+U_L(\theta)=
+\left[\prod_{q=1}^{n_q}R_y(\theta_{qL})\right]
+\prod_{\ell=1}^{L}
+\left[U_{\mathrm{ent}}^{(\ell)}\prod_{q=1}^{n_q}R_y(\theta_{q,\ell-1})\right].
 \label{eq:ansatz}
 \end{equation}
-Logarithmic qubit count does not imply shallow representability. A normalized real vector in $D=2^{n_q}$ dimensions has $D-1$ independent amplitudes, whereas a depth-$L$ hardware-efficient circuit has only $O(Ln_q)$ parameters. Therefore, a fixed-depth family cannot be universally expressive as $N$ grows.
+This is the real-amplitude member of the hardware-efficient family \cite{Kandala2017}. Logarithmic qubit count does not imply shallow representability. A normalized real vector in $D=2^{n_q}$ dimensions has $D-1$ independent amplitudes, whereas a depth-$L$ hardware-efficient circuit has only $O(Ln_q)$ parameters. Therefore, a fixed-depth family cannot be universally expressive as $N$ grows.
 
 Random parameterized circuits may exhibit barren plateaus in which gradient variance decays exponentially with qubit count \cite{McClean2018}. Cost-function locality can materially alter trainability, and even shallow circuits with global costs may exhibit barren plateaus \cite{CerezoBP2021}. Binary amplitude encoding and Cholesky whitening can turn a local structural operator into a nonlocal qubit Hamiltonian, so structural locality does not guarantee a local quantum cost. This concern is directly connected to the scaling results in \cref{sec:results}: for consistent mass, the transformed density grows to 0.308 and the Pauli count to 2950 at $N=128$, indicating that increasingly many computational-basis amplitudes and Pauli supports become coupled. Such densification moves the objective away from the local-cost setting in which trainability can be more favorable and toward the global-cost regime associated with gradient concentration. The present 2--12-qubit data cannot establish a structural barren plateau, but they show that whitening-induced nonlocality can worsen the locality condition as $N$ grows independently of whether circuit depth is increased. Quantifying this interaction for larger qubit counts, alternative orderings, and domain-decomposed mappings is therefore an open problem rather than an assumed asymptotic advantage.
 
-For parameter $\theta_a$, the empirical trainability statistic used here is
+For a single parameter $\theta_a$---here $a=0$, the first $R_y$ angle of the initial rotation layer---the empirical trainability statistic used here is
 \begin{equation}
 V_g(n_q)=\Var_{\theta\sim\mathcal D}
 \left[\frac{\partial E(\theta)}{\partial\theta_a}\right].
@@ -550,12 +610,12 @@ Every monitoring epoch is solved independently using the same independently defi
 c_{ij,t}=\mathbf z_{ij,t}^T\boldsymbol\Sigma_{i,0}^{-1}\mathbf z_{ij,t},
 \label{eq:trackingcost}
 \end{equation}
-where $\boldsymbol\Sigma_{i,0}$ is estimated from healthy baseline variability. Mode labels are assigned by
+where $\boldsymbol\Sigma_{i,0}$ is estimated from healthy baseline variability. Cost functions combining a frequency ratio with a MAC term, minimized by an assignment algorithm, are standard in automated operational modal analysis \cite{Reynders2012}; what is adapted here is the uncertainty normalization and the insistence that pairing occur strictly after an independent eigensolve. Mode labels are assigned by
 \begin{equation}
 \pi_t^*=\argmin_{\pi}\sum_i c_{i,\pi(i),t}.
 \label{eq:hungarian}
 \end{equation}
-A change alarm is based on $c_{i,\pi(i),t}$ exceeding a baseline quantile or a calibrated $\chi^2$ threshold. Because pairing occurs after independent eigensolution, it cannot pull a damaged mode toward its healthy predecessor. Near degeneracy, the same procedure is applied to principal angles between subspaces.
+A change alarm is based on $c_{i,\pi(i),t}$ exceeding a baseline quantile. A $\chi^2$ calibration is not appropriate here: $1-\MAC$ is non-negative and concentrates at zero, so the quadratic form is not $\chi^2_2$ distributed and the empirical quantile should be used instead. Because pairing occurs after independent eigensolution, the objective cannot pull a damaged mode toward its healthy predecessor. This is weaker than unbiasedness of the alarm: the assignment itself can still mislabel under damage-induced mode veering, after which the change statistic is referenced to the wrong baseline mode, and modes that go unidentified in an epoch---routine in operational modal analysis---need an explicit missing-label rule that \cref{eq:hungarian} does not provide. A further practical restriction is that $\MAC^{(M)}$ requires $\M$ at every degree of freedom, whereas output-only identification returns shapes only at instrumented coordinates; a sensor-space unweighted MAC must be substituted there, at the cost of the mass-orthogonality interpretation. Near degeneracy, the same procedure is applied to principal angles between subspaces.
 
 \subsection{Sensor-space recovery}
 
@@ -587,24 +647,26 @@ For mass-normalized modes and stiffness-only damage,
 =-\ph_i^T\K_e^0\ph_i.
 \label{eq:sensitivity}
 \end{equation}
-The element modal-strain-energy fraction is
+The element modal-strain-energy fraction is formed with the \emph{baseline} element stiffness $\K_e^0$ in the numerator, for both the healthy and the damaged structure,
 \begin{equation}
 \eta_{e,i}=
-\frac{\ph_i^T\K_e\ph_i}{\ph_i^T\K\ph_i}.
+\frac{\ph_i^T\K_e^0\ph_i}{\ph_i^T\K\ph_i},
 \label{eq:mse}
 \end{equation}
-With
+in the spirit of standard modal-strain-energy practice \cite{Stubbs1995,Cornwell1999}, though not identical to it: those formulations hold the undamaged stiffness fixed in both numerator and denominator and compare the resulting fractions as a ratio, whereas \cref{eq:mse} retains the current global $\K$ in the denominator---where it is the measured eigenvalue---and \cref{eq:damageindex} takes an absolute difference. The absolute difference is biased toward elements carrying high modal strain energy, which a ratio formulation would partly normalize away. This is not a convention of convenience: $\K_e(\mathbf d)$ is the unknown being inferred, so an operator built from it could not be assembled, let alone measured. The denominator is unaffected, since $\ph_i^T\K\ph_i=\lambda_i$ for mass-normalized modes and is therefore supplied by the eigensolver itself. With
 \begin{equation}
-\Hq_e=\frac{\mathbf L^{-1}\K_e\mathbf L^{-T}}{s_t},
+\Hq_e=\frac{\mathbf L^{-1}\K_e^0\mathbf L^{-T}}{s_t},
 \label{eq:He}
 \end{equation}
 one obtains
 \begin{equation}
-\eta_{e,i}=
-\frac{\langle\psi_i|\Hq_e|\psi_i\rangle}
-{\langle\psi_i|\widetilde\A|\psi_i\rangle}.
+\eta_{e,i}^{(\epoch)}=
+\frac{\langle\psi_i^{(\epoch)}|\Hq_e|\psi_i^{(\epoch)}\rangle}
+{\langle\psi_i^{(\epoch)}|\widetilde\A^{(\epoch)}|\psi_i^{(\epoch)}\rangle},
 \label{eq:qmse}
 \end{equation}
+Two caveats bound the practical reach of \cref{eq:qmse}. The numerator operator is built from the baseline model and is therefore available, but the state $|\psi_i\rangle$ is not. Preparing the damaged mode requires either an eigensolve of the damaged operator, which presumes exactly the model being inferred, or amplitude encoding of a mode shape identified classically from measured response---in which case $\ph_i^T\K_e^0\ph_i$ is an $O(\mathrm{nnz}(\K_e))$ classical inner product and no measurement strategy can make the quantum evaluation competitive. Operational modal analysis moreover returns shapes only at instrumented coordinates, so the full $N$-vector that amplitude encoding needs does not exist. The finite-shot study of \cref{sec:results} accordingly isolates measurement variance under a \emph{known} damaged model; it quantifies the cost of the expectation-value formulation and is not a demonstration of a deployable monitoring method.
+
 A multimode change score is
 \begin{equation}
 D_e=\sum_{i=1}^{m}w_i|\eta_{e,i}^{d}-\eta_{e,i}^{0}|,
@@ -628,7 +690,34 @@ where
 \begin{equation}
 h_\ell=2^{-n_q}\tr(P_\ell\Hq).
 \end{equation}
-Since $4^{n_q}\le4N^2$, the worst-case Pauli basis grows quadratically in the encoded structural dimension. Actual nonzero count depends on ordering, padding, mass model, and whitening. Commuting-group methods can reduce circuit settings but not eliminate finite-sampling error \cite{Crawford2021}.
+A real symmetric $\Hq$ has zero coefficient on every Pauli string containing an odd number of $Y$ factors, by the parity argument used in the proof of \cref{prop:lumped}, so at most $2^{2n_q-1}+2^{n_q-1}\le2N^2$ of the $4^{n_q}$ strings can be nonzero. The worst-case Pauli basis therefore still grows quadratically in the encoded structural dimension, at half the naive rate. Several consistent-mass cases below \emph{saturate} this bound exactly---136 at $n_q=4$ and 2080 at $n_q=6$---so it is attained, not merely an upper limit. Actual nonzero count depends on ordering, padding, mass model, and whitening. Commuting-group methods can reduce circuit settings but not eliminate finite-sampling error \cite{Crawford2021}. Throughout, a coefficient is counted as nonzero when $|h_\ell|>10^{-10}$. That absolute cut is not innocuous for the consistent-mass operator, whose coefficient magnitudes show no numerical-zero plateau: at $N=128$ the count is 2316, 2950, 3640 and 4251 for cuts $10^{-8}$, $10^{-10}$, $10^{-12}$ and $10^{-14}$, and the fitted exponent of \cref{sec:complexity} moves from 1.36 to 1.65 over the same range. Lumped-mass counts are insensitive to the cut. Reported Pauli counts should therefore be read together with the threshold that produced them.
+
+For a diagonal mass matrix the quadratic bound is far from attained, and the exact count is available in closed form.
+
+\begin{proposition}[Lumped-mass Pauli count]
+\label{prop:lumped}
+Let the mesh be a $d$-dimensional grid with axis lengths $L_1,\ldots,L_d$, each a power of two, indexed row-major so that axis $a$ carries stride $\sigma_a=\prod_{b>a}L_b$, with nearest-neighbour couplings along each axis, and let $\M$ be diagonal so that $\A=\M^{-1/2}\K\M^{-1/2}$ inherits the sparsity pattern of $\K$. Then
+\begin{equation}
+N_P\le(n_q+2)\,2^{\,n_q-1}=O(N\log N),
+\label{eq:lumpedcount}
+\end{equation}
+independently of the spatial dimension $d$, with equality if and only if
+\begin{equation}
+S(x,z)=\sum_i(-1)^{|i\wedge z|}A_{i,i\oplus x}\neq0
+\label{eq:lumpedequality}
+\end{equation}
+for each of the $n_q$ nonzero coupling masks $x$ and every $z$ with $|x\wedge z|$ even.
+\end{proposition}
+
+\begin{proof}
+Write a Pauli string as $P=\mathrm i^{n_Y}X^{x}Z^{z}$ with $n_Y=|x\wedge z|$. Then $P$ connects only the index pairs $(i,i\oplus x)$, so a mask $x$ contributes nothing unless $A_{i,i\oplus x}\ne0$ for some $i$. Along axis $a$ the neighbour pairs are $(i,i+\sigma_a)$, and for a power-of-two axis length $L_a$ the values $i\oplus(i+\sigma_a)$ realise exactly $\log_2 L_a$ distinct masks; the strides occupy disjoint bit ranges, so masks from different axes are distinct. The nonzero off-diagonal masks therefore number $\sum_a\log_2 L_a=\log_2 N=n_q$, with $x=0$ contributing the diagonal.
+
+Fix $x$ and let $S(x,z)=\sum_i(-1)^{|i\wedge z|}A_{i,i\oplus x}$, so that the coefficient is $2^{-n_q}\mathrm i^{n_Y}S$. Re-indexing $i\mapsto i\oplus x$ and using $\A=\A^T$ gives $S=(-1)^{|x\wedge z|}S$, so $S$ vanishes whenever $n_Y$ is odd. For $x\ne0$ exactly half of the $2^{n_q}$ masks $z$ satisfy $|x\wedge z|$ even, leaving $2^{n_q-1}$ surviving coefficients per nonzero mask, while $x=0$ admits all $2^{n_q}$. Hence $N_P$ equals the number of pairs $(x,z)$ with $|x\wedge z|$ even and $S(x,z)\ne0$, which is at most $2^{n_q}+n_q2^{n_q-1}$, with equality exactly under \cref{eq:lumpedequality}.
+\end{proof}
+
+Condition \cref{eq:lumpedequality} is checkable and not vacuous. For fixed $x$, $S(x,\cdot)$ is the Walsh--Hadamard transform of the vector $v^{(x)}_i=A_{i,i\oplus x}$ carried on that coupling diagonal, so equality asks only that no transform coefficient vanish on the even-parity indices. Heterogeneous properties make this generic; constant ones destroy it. On a homogeneous mesh $v^{(x)}$ is constant across its support, its transform concentrates on a vanishing fraction of $z$, and a uniform lumped chain carries only $3\cdot2^{\,n_q-1}-1$ nonzero terms ($5,11,23,47,95$ for $n_q=2,\ldots,6$), i.e.\ $\Theta(N)$ rather than $\Theta(N\log N)$. Evaluating \cref{eq:lumpedequality} directly reproduces both regimes exactly: 20, 48 and 112 surviving pairs for the heterogeneous chains at $n_q=3,4,5$, against 11, 23 and 47 for their uniform counterparts. The heterogeneous meshes used throughout this paper are chosen precisely to avoid such cancellations, so \cref{eq:lumpedcount} is attained there while a uniform benchmark would report fewer terms. The count is also ordering-dependent: it characterizes the lumped operator \emph{in a locality-preserving indexing}, and a scrambled DOF order moves it back toward the $O(N^2)$ worst case.
+
+\Cref{eq:lumpedcount} matches every lumped-mass count reported below exactly, in one, two, and three dimensions: $8,20,48,112,256,576$ for $n_q=2,\ldots,7$, and $1280$ and $6144$ at $n_q=8$ and $10$ (\cref{tab:scaling,tab:dimscaling}). It also explains why those counts coincide across spatial dimensions at matched $N$: the number of distinct coupling masks is $\log_2 N$ however the axes are partitioned. The measurement burden of the lumped model is therefore at most $(n_q+2)2^{\,n_q-1}=O(N\log N)$, not $O(N^2)$, and is attained by the heterogeneous meshes studied here; the quadratic regime is reached only through the mass model, which is the mechanism quantified in \cref{sec:results}.
 
 Arbitrary amplitude-state preparation may itself require gate counts exponential in qubit number in the worst case, despite logarithmic qubit storage \cite{PleschBrukner2011}. Resource reports must therefore include state preparation, two-qubit gates, circuit depth, Pauli terms, commuting groups, shots, and optimizer evaluations.
 
@@ -693,9 +782,10 @@ The resource vector \cref{eq:resourcevector} collapses into asymptotic order for
 Stage & Classical (Lanczos) & Quantum (VQD)\\
 \midrule
 Assembly & $O(N)$ & $O(N)$\\
-Cholesky of $\M$ & --- & $O(Nb^2)=O(N)$\\
+Cholesky of $\M$ & $O(Nb^2)^{\P}$ & $O(Nb^2)=O(N)$\\
 Whitening $\A$ & --- & $O(N^2)$\\
 Pauli decomposition & --- & $O(N^2\log N)$\\
+State preparation$^{\S}$ & --- & $\Omega(N/\log N)$ depth\\
 Solve / measure & $O(kN\,T_{\mathrm{it}})$ & $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$\\
 \midrule
 Total time & $O(kN\,T_{\mathrm{it}})$ & $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$\\
@@ -704,19 +794,21 @@ Space & $O(Nk)$ & $O(N)+O(N^2)^{\dagger}$\\
 \end{tabular}
 
 \vspace{0.35em}
-\parbox{\columnwidth}{\footnotesize $T_{\mathrm{it}}$ is the Lanczos iteration count: approximately constant with shift-invert ARPACK, and $O(\sqrt N)$--$O(N)$ for unpreconditioned Lanczos depending on the relative spectral gap. $^{\dagger}$$O(N)$ statevector amplitudes plus $O(N^2)$ classical storage for the dense-whitened operator and its Pauli list. $^{\ddagger}$Spectral-safe padding costs $O(D-N)=O(N)$ since $D<2N$, and the cheap (Gershgorin) bound policy costs $O(N^2)$; both are dominated by the whitening row above and are therefore omitted. The optional tighter Ritz/Lanczos bound policy \eqref{eq:ritzUr} instead costs $O(p\,\mathrm{nnz}(\A)+Np^2+p^3)$ time and $O(Np)$ space, a genuine additional cost not always dominated by whitening, reported separately as $C_{\mathrm{bound}}$.}
+\parbox{\columnwidth}{\footnotesize $T_{\mathrm{it}}$ is the Lanczos iteration count: roughly constant with shift-invert ARPACK, $O(\sqrt N)$--$O(N)$ unpreconditioned. $^{\dagger}$$O(N)$ statevector amplitudes plus $O(N^2)$ storage for the whitened operator and its Pauli list. $^{\P}$A generalized Lanczos also factorizes $\M$; negligible for banded $\M$. $^{\S}$Every circuit execution must first prepare the trial state, and \cref{rem:depth} bounds that depth below by $\Omega(N/\log_2 N)$. The quantum column therefore counts circuit \emph{executions} and the classical column floating-point operations; the two are commensurable only after multiplying by that depth factor. $^{\ddagger}$Padding and the Gershgorin bound cost $O(N)$ and $O(N^2)$, both dominated by whitening. The tighter Ritz policy \eqref{eq:ritzUr} instead costs $O(p\,\mathrm{nnz}(\A)+Np^2+p^3)$ time and $O(Np)$ space, reported separately as $C_{\mathrm{bound}}$. The whitening and Pauli rows assume band-aware triangular solves and a fast Walsh--Hadamard projection; the reference implementation uses dense LAPACK and an explicit term-by-term projection, so its wall time is not the tabulated asymptote.}
 \end{table}
 
-Three consequences follow. First, preprocessing is not the bottleneck for these chains: the banded Cholesky is $O(N)$, not the $O(N^3)$ dense cost noted in \cref{sec:mapping}. Second, the classical solver acts on the sparse $\K$ directly, so its cost scales with $\mathrm{nnz}(\K)=O(N)$, whereas whitening densifies $\A$---from density $0.023$ to $0.308$ between lumped and consistent mass at $N=128$---so the Pauli representation carries $N_P=O(N^2)$ terms in the worst case ($4^{n_q}\le4N^2$). This quadratic figure is an upper bound: over the tested range the consistent-mass density and Pauli count grow sub-quadratically (empirical exponent ${\approx}1.4$--$1.5$, \cref{fig:pauliscale}), and no universal quadratic law is claimed. Even so, merely constructing and storing that operator is superlinear in both time and space, and already exceeds the entire classical eigensolve once $N$ is large relative to $k$, before a single shot is taken. Third, the measurement phase $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$ dominates the quantum column; by \cref{eq:freqvar} the low-frequency modes are the most sampling-intensive because the eigenvalue-to-frequency map amplifies variance as $1/f_i^2$. The classical cost is left as $O(kN\,T_{\mathrm{it}})$ rather than a single power of $N$ because $T_{\mathrm{it}}$ depends on the solver and the spectral gap; under either policy it is far below the quantum column. The optimizer factor $N_{\mathrm{eval}}$ and the shots needed per gradient enter only through trainability, and \cref{sec:results} finds the gradient variance decaying polynomially rather than exponentially in $n_q$ over the tested range, i.e.\ a polylogarithmic factor in $N$; the no-advantage conclusion therefore rests on the measurement bottleneck and does not depend on assuming an untrainable barren plateau.
+Three consequences follow. First, preprocessing is not the bottleneck for these chains: the banded Cholesky is $O(N)$, not the $O(N^3)$ dense cost noted in \cref{sec:mapping}. Second, the classical solver acts on the sparse $\K$ directly, so its cost scales with $\mathrm{nnz}(\K)=O(N)$, whereas whitening densifies $\A$---from density $0.023$ to $0.308$ between lumped and consistent mass at $N=128$---so the Pauli representation carries $N_P=O(N^2)$ terms in the worst case ($2^{2n_q-1}+2^{n_q-1}\le2N^2$). This quadratic figure is an upper bound: over the tested range the consistent-mass density and Pauli count grow sub-quadratically (empirical exponent ${\approx}1.4$--$1.5$ fitted over $N\ge16$, \cref{fig:pauliscale}), and no universal quadratic law is claimed. The local exponent moreover falls with $N$ over $N\ge8$, reaching 1.25 for the last tested doubling, so the growth is decelerating rather than settling onto a power law. Even so, merely constructing and storing that operator is superlinear in both time and space, and already exceeds the entire classical eigensolve once $N$ is large relative to $k$, before a single shot is taken. Third, the measurement phase $O(kN^2\varepsilon^{-2}N_{\mathrm{eval}})$ dominates the quantum column; by \cref{eq:freqvar} the low-frequency modes are the most sampling-intensive because the eigenvalue-to-frequency map amplifies variance as $1/f_i^2$. That expression treats $\varepsilon$ as an absolute energy tolerance, which understates the growth: the decision-relevant requirement is a fixed \emph{relative} accuracy on a frequency. With $\Hq$ normalized so $\norm{\Hq}\approx1$, $\Var(\widehat E)$ is $O(1/n)$ independently of $N$, whereas $\lambda_1/\lambda_{\max}=O(N^{-2})$ for a chain; holding the fundamental-frequency error fixed therefore demands $\varepsilon=O(N^{-2})$, hence $\varepsilon^{-2}=O(N^{4})$ and a measurement term of $O(kN^{6}N_{\mathrm{eval}})$. The mechanism is already visible at $N=6$ in \cref{tab:shotfreq}: the mode-1 to mode-4 RMSE ratio is 31.9 at $10^5$ shots per term, against $(f_4/f_1)^2=31.6$. The classical cost is left as $O(kN\,T_{\mathrm{it}})$ rather than a single power of $N$ because $T_{\mathrm{it}}$ depends on the solver and the spectral gap; under either policy it is far below the quantum column. The optimizer factor $N_{\mathrm{eval}}$ and the shots needed per gradient enter only through trainability, and \cref{sec:results} finds the gradient variance decaying polynomially rather than exponentially in $n_q$ at fixed shallow depth, i.e.\ a polylogarithmic factor in $N$---though that favourable reading does not survive increasing the depth toward expressibility. The no-advantage conclusion rests on the measurement bottleneck either way, and so does not depend on assuming an untrainable barren plateau.
 
 \section{Numerical program}
 \label{sec:numerical}
 
 All experiments are reproducible with the accompanying Python code and use no quantum software development kit. Exact circuit states are constructed directly, Pauli decompositions are computed explicitly, and finite-shot estimates are sampled from the exact Pauli means. The studies are designed to answer separate questions rather than to make a speedup claim.
 
+Two six-DOF benchmarks are used and should not be confused. Benchmark~S is a fixed-base shear building with floor masses decreasing linearly from $220$ to $170$\,t and story stiffnesses from $220$ to $170$\,MN/m, giving $f_1=1.280$\,Hz; it is scaled by $s_t=U_G$ and padded with $\alpha=1.25$, and it backs the restart study of \cref{sec:results} and the certified-penalty run of Appendix~B. Benchmark~C is the $N=6$ member of the fixed-base chain family of Test~B, with $k=2.2\times10^8(1-0.35\xi)$\,N/m and element mass $2\times10^4(1-0.20\xi)$\,kg for $\xi\in[0,1]$ and lumped mass, giving $f_1=4.481$\,Hz; it is scaled by $s_t=\lambda_{\max}$ and padded with $\alpha=\max(1.10,U_G/s_t+10^{-3})$, and it backs Tests~A, D and E and the measurement floor. Both are one-dimensional and lumped-mass; the consistent-mass results are confined to Test~B.
+
 \subsection{Test A: exact deflation threshold}
 
-A six-DOF fixed-base shear chain is mass whitened and padded to three qubits. For targets $r=2,3,4$, a common penalty is swept across the exact threshold in \cref{eq:betathreshold}. Exact eigenvalues are used here only to verify the necessary-and-sufficient threshold; they are not counted as an operational preprocessing assumption. Thus $U_r=\varepsilon_r$ and $\delta_j=0$ in the threshold verification. In a deployable execution, Algorithm~\ref{alg:certvqe} instead uses either the Gershgorin policy \cref{eq:globalUr} or a recorded Ritz/Lanczos bound \cref{eq:ritzUr}. A second experiment rotates each prior projector by a controlled angle and compares the target-state rotation with \cref{eq:dkbound}.
+Benchmark~C is mass whitened and padded to three qubits. For targets $r=2,3,4$, a common penalty is swept across the exact threshold in \cref{eq:betathreshold}. Exact eigenvalues are used here only to verify the necessary-and-sufficient threshold; they are not counted as an operational preprocessing assumption. Thus $U_r=\varepsilon_r$ and $\delta_j=0$ in the threshold verification. In a deployable execution, Algorithm~\ref{alg:certvqe} instead uses either the Gershgorin policy \cref{eq:globalUr} or a recorded Ritz/Lanczos bound \cref{eq:ritzUr}. A second experiment rotates each prior projector by a controlled angle and compares the target-state rotation with \cref{eq:dkbound}.
 
 \subsection{Test B: Hamiltonian and preprocessing scaling}
 
@@ -724,7 +816,7 @@ Fixed-base chains with $N\in\{4,8,16,32,64,128\}$ use smoothly varying stiffness
 
 \subsection{Test C: ansatz depth, optimizer restarts, and trainability}
 
-Real-amplitude circuits use a CNOT ring. Fundamental-mode VQE is run for 8 and 16 DOFs at depths 1--3. The six-DOF first mode is repeated for 20 random initializations at depths 1 and 2 to distinguish systematic expressibility failure from local optimizer failure. Gradient variance is sampled at 2--7 qubits under uniform and near-identity initialization.
+Real-amplitude circuits use a CNOT ring. Fundamental-mode VQE is run for 8 and 16 DOFs at depths 1--3. The six-DOF first mode is repeated for 20 random initializations at depths 1 and 2 to distinguish systematic expressibility failure from local optimizer failure. Gradient variance is sampled at 2--12 qubits under uniform and near-identity initialization.
 
 \subsection{Test D: finite-shot modal frequency}
 
@@ -732,7 +824,7 @@ For the exact first four modes of the six-DOF chain Hamiltonian, each Pauli term
 
 \subsection{Test E: finite-shot damage localization}
 
-Stiffness losses of 2\%, 5\%, 10\%, and 20\% are introduced at one of six elements. Baseline and damaged element energy fractions are estimated independently from Pauli measurements. The element with maximum $D_e$ is selected. Each condition uses 200 Monte Carlo trials; random guessing has probability $1/6=16.7\%$.
+Stiffness losses of 2\%, 5\%, 10\%, and 20\% are introduced at element 3, counting from the base. The location is fixed rather than swept; across the six possible locations the exact normalized localization margin at 10\% loss ranges from 0.515 to 0.702, so element 3 at 0.654 is mid-range and not favourably selected. Baseline and damaged element energy fractions are estimated independently from Pauli measurements. Both estimates use the baseline element operators $\Hq_e$ of \cref{eq:He}; only the state and the normalization change between the healthy and damaged epochs. The element with maximum $D_e$ is selected. Each condition uses 200 Monte Carlo trials; random guessing has probability $1/6=16.7\%$.
 
 \section{Results}
 \label{sec:results}
@@ -748,7 +840,9 @@ Stiffness losses of 2\%, 5\%, 10\%, and 20\% are introduced at one of six elemen
 \label{fig:penalty_threshold}
 \end{figure}
 
-Projector perturbations confirm the second half of the theory. With deflated separation $g_r=0.05$, projector rotation angles of 0.02, 0.04, and 0.06 rad produce target-state sine errors of 0.249, 0.413, and 0.508, while the conservative Davis--Kahan bounds are 0.273, 0.545, and 0.818. The bound is not tight, but correctly captures amplification by $\beta_j$ and loss of protection as $\norm{\Delta_r}$ approaches the separation.
+Projector perturbations confirm the second half of the theory. The deflated separation is $g_r=0.05$, so \cref{eq:dkbound} applies while $\norm{\Delta_r}_2<g_r/2=0.025$. Within that range, projector rotation angles of 0.005 to 0.035 rad give perturbations $\norm{\Delta_r}_2=0.0034$ to $0.0239$ and target-state sine errors of 0.068 to 0.380, against Davis--Kahan bounds of 0.136 to 0.954. The bound holds at every point and is uniformly conservative by a factor of about two, correctly capturing the amplification of projector error by $\beta_j$. Beyond $\norm{\Delta_r}_2=g_r/2$ the guarantee lapses and the bound is vacuous: at a rotation of 0.06 rad the measured sine error is 0.508, but the target eigenvector is no longer certified to be isolated.
+
+The perturbation is deliberately adversarial. The first projector is rotated toward the target mode itself, so the contamination lies exactly along the direction deflation is meant to protect; this is why a 0.02 rad projector error produces a 0.249 target rotation, a twelvefold amplification.
 
 \subsection{Gershgorin scaling is not the dominant problem in the tested chains}
 
@@ -787,13 +881,13 @@ The two-scale scheme remains useful because a different topology or material con
 \label{tab:scaling}
 \begin{tabular}{lrrrrr}
 \toprule
-Mass & $N$ & $n_q$ & $s_G/\lambda_{\max}$ & Pauli terms & QWC groups\\
+Mass & $N$ & $n_q$ & $U_G/\lambda_{\max}$ & Pauli terms & QWC groups\\
 \midrule
 Lumped & 16 & 4 & 1.053 & 48 & 16\\
 Lumped & 64 & 6 & 1.022 & 256 & 64\\
 Lumped & 128 & 7 & 1.014 & 576 & --\\
-Consistent & 16 & 4 & 1.056 & 136 & 41\\
-Consistent & 64 & 6 & 1.026 & 1241 & 221\\
+Consistent & 16 & 4 & 1.058 & 136 & 41\\
+Consistent & 64 & 6 & 1.025 & 1241 & 221\\
 Consistent & 128 & 7 & 1.017 & 2950 & --\\
 \bottomrule
 \end{tabular}
@@ -803,22 +897,22 @@ Preprocessing to $N=512$ confirms that the Cholesky factor of the chain remains 
 
 \subsection{Circuit depth, not qubit count, controls exact-state recovery}
 
-The 8- and 16-DOF fundamental-mode results are summarized in \cref{tab:vqe_depth} and \cref{fig:largervqe}. For 16 DOFs, depth 1 gives 81.75\% frequency error, depth 2 gives 5.16\%, and depth 3 gives $4.09\times10^{-9}$\%. The exact-state result shows that four qubits are enough to store the vector but not that a shallow circuit can prepare it.
+The 8- and 16-DOF fundamental-mode results are summarized in \cref{tab:vqe_depth} and \cref{fig:largervqe}. For 16 DOFs, depth 1 gives 81.75\% frequency error, depth 2 gives 5.16\%, and depth 3 gives $2.27\times10^{-9}$\%. The exact-state result shows that four qubits are enough to store the vector but not that a shallow circuit can prepare it.
 
 \begin{table}[t]
 \centering
-\caption{State-vector VQE depth study for the fundamental mode.}
+\caption{State-vector VQE depth study for the fundamental mode. The failing rows are limited by ansatz expressibility and are stable under additional restarts; the near-zero entries are limited instead by optimizer tolerance and fall further as the restart budget is increased.}
 \label{tab:vqe_depth}
 \begin{tabular}{rrrrr}
 \toprule
 $N$ & Qubits & Depth & Parameters & Frequency error (\%)\\
 \midrule
 8 & 3 & 1 & 6 & 27.33\\
-8 & 3 & 2 & 9 & $5.22\times10^{-13}$\\
-8 & 3 & 3 & 12 & $1.06\times10^{-12}$\\
+8 & 3 & 2 & 9 & $2.00\times10^{-12}$\\
+8 & 3 & 3 & 12 & $8.59\times10^{-13}$\\
 16 & 4 & 1 & 8 & 81.75\\
 16 & 4 & 2 & 12 & 5.16\\
-16 & 4 & 3 & 16 & $4.09\times10^{-9}$\\
+16 & 4 & 3 & 16 & $2.27\times10^{-9}$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -830,9 +924,9 @@ $N$ & Qubits & Depth & Parameters & Frequency error (\%)\\
 \label{fig:largervqe}
 \end{figure}
 
-Twenty six-DOF restarts reinforce this interpretation. Depth 1 has a minimum first-mode error of 127.99\%, a median of 130.20\%, and a maximum of 130.20\%; depth 2 has a median error $4.3\times10^{-12}$\%. The shallow failure is therefore systematic ansatz error, not an unlucky optimizer seed.
+Twenty six-DOF restarts reinforce this interpretation. Depth 1 has a minimum first-mode error of 127.99\%, a median of 130.20\%, and a maximum of 130.20\%; depth 2 has a median error $4.1\times10^{-12}$\%. The shallow failure is therefore systematic ansatz error, not an unlucky optimizer seed.
 
-\begin{remark}[Parameter-count lower bound on required depth]
+\begin{remark}[Parameter-count lower bound on required depth]\label{rem:depth}
 The depth dependence in \cref{tab:vqe_depth} follows from a parameter count. A real, normalized state in $D=2^{n_q}$ dimensions has $D-1$ free amplitudes, whereas the real-amplitude circuit of \cref{eq:ansatz} at depth $L$ has $n_q(L+1)$ parameters. Reaching an arbitrary target therefore requires
 \begin{equation}
 n_q(L+1)\ge 2^{n_q}-1,
@@ -840,12 +934,20 @@ n_q(L+1)\ge 2^{n_q}-1,
 L\ge\frac{2^{n_q}-1}{n_q}-1.
 \label{eq:depthbound}
 \end{equation}
-This necessary condition predicts every row of \cref{tab:vqe_depth}: for $n_q=3$ it holds at $L=2$ ($9\ge7$) but not $L=1$ ($6<7$); for $n_q=4$ it holds at $L=3$ ($16\ge15$) but not $L=2$ ($12<15$). Since $2^{n_q}=N$, the required depth grows as $L=\Omega(N/\log_2 N)$, so a fixed-depth family cannot remain expressive as $N$ increases and the logarithmic qubit count does not translate into a logarithmic-depth circuit. The condition is necessary but not sufficient: the CNOT-ring entangler can further restrict the reachable manifold, so \cref{eq:depthbound} is a lower bound on the depth an exact preparation requires. This is consistent with the systematic shallow-circuit failure reported above.
+A parameter count bounds the dimension of the reachable manifold, so it establishes that a fixed-depth family cannot be surjective onto the state sphere; it does not by itself prove that one particular target is unreachable. The condition is nonetheless consistent with every row of \cref{tab:vqe_depth}: for $n_q=3$ it holds at $L=2$ ($9\ge7$) but not $L=1$ ($6<7$); for $n_q=4$ it holds at $L=3$ ($16\ge15$) but not $L=2$ ($12<15$). Since $2^{n_q}=N$, the required depth grows as $L=\Omega(N/\log_2 N)$, so a fixed-depth family cannot remain expressive as $N$ increases and the logarithmic qubit count does not translate into a logarithmic-depth circuit. The condition is necessary but not sufficient: the CNOT-ring entangler can further restrict the reachable manifold, so \cref{eq:depthbound} is a lower bound on the depth an exact preparation requires. This is consistent with the systematic shallow-circuit failure reported above.
 \end{remark}
 
 \subsection{Gradient statistics raise, but do not settle, the barren-plateau question}
 
-\Cref{fig:gradients} reports gradient variance for a depth-2 circuit over 2--12 qubits, with bootstrap 95\% confidence intervals from the 80 samples per point. Under uniform initialization the variance declines from $2.62\times10^{-2}$ at 2 qubits to $9.82\times10^{-4}$ at 12 qubits. A power law in $n_q$ fits the uniform-initialization series better than an exponential: over the full range $R^2=0.96$ versus $0.83$, favouring the power law by $\Delta\mathrm{AIC}=15$; over the small-system-free range $n_q\ge4$ the advantage narrows to $R^2=0.90$ versus $0.85$ ($\Delta\mathrm{AIC}=4$, moderate). The decline does not stop: a linear fit to the tail ($n_q\ge7$) gives a shallow slope of $-0.12$ per qubit (95\% CI $[-0.23,-0.01]$), statistically nonzero but far below the per-qubit exponential rate that defines a barren plateau. Near-identity initialization produces smaller and nonmonotonic values, including $1.52\times10^{-5}$ at 12 qubits. Thus over the accessible range the gradients shrink at an approximately polynomial, not exponential, rate; $n_q\le12$ remains far from asymptotic, so the manuscript does not claim the definitive absence of a true barren plateau at larger scale.
+Two features of this diagnostic bound what it can establish, and both work against detecting a plateau rather than for it. The depth is held at $L=2$ while $n_q$ grows, so by \cref{rem:depth} the circuit is far from expressive over most of the range and comes nowhere near a unitary 2-design; the concentration mechanism that produces barren plateaus is therefore not something this experiment could exhibit even if it were operating. And the derivative is taken with respect to a single first-layer parameter, adjacent to $|0\rangle^{\otimes n_q}$, which is systematically the least plateau-prone choice available. The result below should be read as evidence that no exponential decay has set in for this particular shallow family and this particular parameter, not as a probe of the asymptotic regime.
+
+\Cref{fig:gradients} reports gradient variance for a depth-2 circuit over 2--12 qubits, with bootstrap 95\% confidence intervals from the 80 samples per point. Under uniform initialization the variance declines from $2.62\times10^{-2}$ at 2 qubits to $9.82\times10^{-4}$ at 12 qubits. A power law in $n_q$ fits the uniform-initialization series better than an exponential: over the full range $R^2=0.96$ versus $0.83$, favouring the power law by $\Delta\mathrm{AIC}=15$; over the small-system-free range $n_q\ge4$ the advantage narrows to $R^2=0.90$ versus $0.85$ ($\Delta\mathrm{AIC}=4$, moderate). The decline does not stop: a linear fit to the tail ($n_q\ge7$) gives a shallow slope of $-0.12$ per qubit (95\% CI $[-0.23,-0.01]$), statistically nonzero but far below the per-qubit exponential rate that defines a barren plateau. Near-identity initialization produces smaller and nonmonotonic values, including $1.52\times10^{-5}$ at 12 qubits.
+
+The decline is best read against the scale of the objective itself. Over the same range the variance of the energy across random parameters falls from $4.94\times10^{-2}$ to $2.32\times10^{-3}$, so the normalized quantity $\Var[\partial_a E]/\Var[E]$ is statistically flat: a linear fit of its logarithm gives a slope of $-0.036$ per qubit (95\% confidence interval $[-0.087,+0.016]$, $R^2=0.17$). Relative to the spread of the landscape it explores, the gradient does not shrink at all over $2\le n_q\le12$, and most of the raw decline in \cref{fig:gradients} reflects the concentration of the normalized spectrum rather than a loss of trainability. Thus at this fixed shallow depth the gradients shrink at an approximately polynomial, not exponential, rate.
+
+That conclusion does not survive an increase in depth, and the fixed-depth diagnostic could not have revealed it. Repeating the sweep across $L\in\{2,4,8\}$, with the differentiated parameter drawn uniformly at random so the statistic is parameter-averaged rather than tied to $\theta_0$, the exponential decay rate steepens systematically: fitting $\log V_g$ against $n_q$ over $2\le n_q\le10$ gives $-0.42$ per qubit at $L=2$, $-0.62$ at $L=4$ and $-0.73$ at $L=8$, against the $-\ln 2\approx-0.69$ that characterizes a barren plateau. Restricting the fit to $n_q\ge7$ leaves the $L=8$ figure at $-0.78$. The $L=8$ variance relative to $L=2$ falls monotonically for $n_q\ge5$, from $0.83$ to $0.12$, so this is a depth--width interaction and not an artefact of differentiating one of more parameters.
+
+The implication is unfavourable. By \cref{rem:depth} expressibility requires $L=\Omega(N/\log_2N)$---at $n_q=10$ that is $L\ge101$, so even $L=8$ lies far inside the inexpressive regime---yet the barren-plateau rate is already attained there. Expressibility and trainability therefore pull against each other for this ansatz family: the depths that could represent the target are deeper than the depths at which gradient concentration has already set in. This is not a proof of an asymptotic plateau at $n_q\le10$, but it removes any reading in which the shallow-circuit result licenses optimism about deeper ones.
 
 \begin{figure}[t]
 \centering
@@ -856,7 +958,7 @@ This necessary condition predicts every row of \cref{tab:vqe_depth}: for $n_q=3$
 
 \subsection{Finite-shot frequency estimation is most difficult for the first mode}
 
-\Cref{fig:shotfreq,tab:shotfreq} show the independent-Pauli Monte Carlo results. At $10^4$ shots per Pauli term, frequency RMSE is 7.87\% for mode 1 but only 0.26\% for mode 4. Even at $10^5$ shots per term, mode-1 RMSE is 2.23\%. This follows from \cref{eq:freqvar}: the square-root transformation amplifies eigenvalue uncertainty at small $f_i$.
+\Cref{fig:shotfreq,tab:shotfreq} show the independent-Pauli Monte Carlo results. At $10^4$ shots per Pauli term, frequency RMSE is 7.88\% for mode 1 but only 0.25\% for mode 4. Even at $10^5$ shots per term, mode-1 RMSE is 2.45\%. This follows from \cref{eq:freqvar}: the square-root transformation amplifies eigenvalue uncertainty at small $f_i$.
 
 \begin{figure}[t]
 \centering
@@ -873,24 +975,26 @@ This necessary condition predicts every row of \cref{tab:vqe_depth}: for $n_q=3$
 \toprule
 Measurement budget & Mode 1 & Mode 2 & Mode 3 & Mode 4\\
 \midrule
-$10^2$ shots/term, independent & 64.11 & 10.78 & 4.72 & 2.47\\
-$10^3$ shots/term, independent & 26.39 & 3.14 & 1.44 & 0.83\\
-$10^4$ shots/term, independent & 7.87 & 1.03 & 0.45 & 0.26\\
-$10^5$ shots/term, independent & 2.23 & 0.34 & 0.15 & 0.08\\
+$10^2$ shots/term, independent & 64.20 & 10.72 & 4.49 & 2.57\\
+$10^3$ shots/term, independent & 25.73 & 3.32 & 1.37 & 0.79\\
+$10^4$ shots/term, independent & 7.88 & 1.00 & 0.47 & 0.25\\
+$10^5$ shots/term, independent & 2.45 & 0.36 & 0.13 & 0.08\\
 \midrule
 QWC-optimal floor at matched total budget$^{\dagger}$ & 0.83 & 0.14 & 0.054 & 0.032\\
 \bottomrule
 \end{tabular}
 
 \vspace{0.35em}
-\parbox{0.97\textwidth}{\footnotesize $^{\dagger}$The six-DOF Hamiltonian has 19 nonidentity Pauli terms and eight greedy qubit-wise-commuting groups. The floor uses the same $1.9\times10^6$ total shots per mode as the $10^5$-shots-per-term baseline, exact within-group covariances, continuous optimal allocation, perfect simultaneous measurement, and no circuit, readout, or allocation overhead. It is therefore an optimistic lower bound, not an expected hardware result.}
+\parbox{0.97\textwidth}{\footnotesize $^{\dagger}$The six-DOF Hamiltonian has 19 nonidentity Pauli terms and eight greedy qubit-wise-commuting groups. The independent rows are 400-trial Monte Carlo estimates, carrying a relative standard error of about 3.5\% (so the mode-1 entry is good to roughly $\pm0.09$); the floor is analytic, and the improvement factors quoted in the text compare it against the \emph{analytic} independent RMSE (2.285\% for mode~1), not against the Monte Carlo row above, so dividing the tabulated rows directly gives a slightly different ratio. The floor uses the same $1.9\times10^6$ total shots per mode as the $10^5$-shots-per-term baseline, exact within-group covariances, continuous optimal allocation, perfect simultaneous measurement, and no circuit, readout, or allocation overhead. It is therefore an optimistic lower bound, not an expected hardware result.}
 \end{table*}
 
-The independent experiment is a baseline, not an optimized measurement strategy. At matched total state preparations, exact-covariance QWC grouping lowers the theoretical RMSE floor by factors of approximately 2.5--2.8, but the first-mode floor remains 0.83\%. Thus grouping is valuable yet does not remove the low-frequency sensitivity. Classical shadows, hardware-efficient entangled measurements, and error mitigation should be compared in future work.
+The independent experiment is a baseline, not an optimized measurement strategy. At matched total state preparations, exact-covariance QWC grouping lowers the theoretical RMSE floor by factors of approximately 2.5--2.8, but the first-mode floor remains 0.83\%. Thus grouping is valuable yet does not remove the low-frequency sensitivity. Classical shadows, hardware-efficient entangled measurements, and error mitigation \cite{Endo2023} should be compared in future work.
 
-\subsection{Exact modal damage agreement does not survive finite sampling}
+\subsection{Finite-shot damage localization is estimable, but only given the damaged model}
 
-Exact-state agreement of the modal energy fractions with the classical solution is a consistency check only. The finite-shot localization study is more informative. \Cref{fig:shotdamage} shows that a 10\% stiffness loss is localized correctly in 26\% of 200 trials at $10^5$ shots per Pauli term (Wilson 95\% interval approximately 20.4--32.5\%), compared with a 16.7\% random baseline. A 20\% loss reaches 36\% (approximately 29.7--42.9\%). The median localization margin remains negative, meaning that an incorrect element usually exceeds the damaged element's score.
+Exact-state agreement of the modal energy fractions with the classical solution is a consistency check only. The finite-shot localization study is more informative. \Cref{fig:shotdamage} shows that at $10^5$ shots per Pauli term a 10\% stiffness loss is localized correctly in 84.5\% of 200 trials (Wilson 95\% interval approximately 78.8--88.9\%), against a 16.7\% random baseline, and a 20\% loss in every trial. The median localization margin is positive at this budget ($+0.28$ for 10\% loss), meaning the damaged element typically outscores every intact competitor.
+
+The budget dependence is steep. The same 10\% loss is localized in only 40.5\% of trials at $10^4$ shots per term (33.9--47.4\%) and remains only marginally above guessing at $10^3$ (23.0\%, one-sided binomial $p=0.013$ against $1/6$). Small damage remains hard at every budget tested: a 2\% loss reaches only 32.0\% at $10^5$ shots per term, with a still-negative median margin. Localization therefore succeeds in this benchmark, but only for moderate damage and only at measurement budgets that \cref{sec:discussion} quantifies as the dominant end-to-end cost.
 
 \begin{figure}[t]
 \centering
@@ -899,7 +1003,13 @@ Exact-state agreement of the modal energy fractions with the classical solution 
 \label{fig:shotdamage}
 \end{figure}
 
-This negative result independently tests the damage formulation and identifies measurement variance as a limiting factor. It does not invalidate modal strain energy as a classical SHM feature; it shows that direct independent-Pauli estimation is presently inefficient for small stiffness changes.
+\begin{remark}[Sensitivity to the element-operator convention]\label{rem:convention}
+The choice in \cref{eq:mse} to build the numerator from the baseline $\K_e^0$ is consequential, not cosmetic. If the operator is instead built from the damaged element stiffness $\K_e(\mathbf d)$---an oracle that presumes the quantity being inferred---the explicit $(1-d_e)$ factor opposes the denominator and mode-shape changes and cancels most of the signal: the exact localization margin at 10\% loss falls by a factor of 11.2, measured accuracy drops from 84.5\% to 25.0\%, and the certified shot requirement rises by two orders of magnitude. Estimating a difference of operator expectations is therefore sensitive to which operator difference is taken, a point that applies to quantum change-detection observables generally.
+\end{remark}
+
+A cross-check against the frequency results of \cref{sec:results} sharpens the picture. The same 10\% loss shifts the modal frequencies by $-1.20$\%, $-0.16$\%, $-1.75$\% and $-0.24$\% for modes 1--4, while the corresponding finite-shot RMSEs at $10^5$ shots per Pauli term are 2.45\%, 0.36\%, 0.13\% and 0.08\%. The damage signal is thus below the measurement noise for the two lowest modes and an order of magnitude above it for the third. Frequency-based detection of this damage is possible at this budget, but only through the higher modes; the fundamental, on which most vibration-based monitoring practice rests, is the least usable of the four.
+
+The study tests the damage formulation end to end and identifies measurement variance, not the formulation, as the limiting factor. Direct independent-Pauli estimation remains inefficient for small stiffness changes; grouped or shadow-based measurement of the change observable is the obvious next step.
 
 \section{Generalization to two and three dimensions}
 \label{sec:dimensions}
@@ -908,7 +1018,7 @@ Every experiment above uses a one-dimensional chain, the most favorable case for
 
 \subsection{What remains dimension-agnostic}
 
-Nothing in the theory assumes a specific spatial dimension. The Cholesky mapping and mass--Euclidean isometry (Proposition~1) hold for any $\M\succ0$, $\K=\K^T$. Spectral-safe padding (Proposition~2) and the scalar-scaling law (Proposition~3) depend only on the spectrum of $\A$. The exact deflation theorem and the Davis--Kahan perturbation bound (Theorem~1, \cref{eq:dkbound}) hold for any Hermitian operator with a spectral gap, independent of what physical system it was built from. The parameter-count depth bound (Remark~2, \cref{eq:depthbound}) depends only on $n_q$, not on how the DOFs are arranged in space. The resource vector \cref{eq:resourcevector} and the finite-shot propagation formulas (\cref{eq:paulivar,eq:energyvar,eq:freqvar}) are likewise generic to any Pauli-decomposed Hamiltonian. Only the \emph{values} taken by $N_P$, the transformed density, and the Gershgorin ratio are specific to a given mesh, and those are what this section measures.
+Nothing in the theory assumes a specific spatial dimension. The Cholesky mapping and mass--Euclidean isometry (Proposition~1) hold for any $\M\succ0$, $\K=\K^T$. Spectral-safe padding (Proposition~2) and the scalar-scaling law (Proposition~3) depend only on the spectrum of $\A$. The exact deflation theorem and the Davis--Kahan perturbation bound (Theorem~1, \cref{eq:dkbound}) hold for any Hermitian operator with a spectral gap, independent of what physical system it was built from. The parameter-count depth bound (\cref{rem:depth}, \cref{eq:depthbound}) depends only on $n_q$, not on how the DOFs are arranged in space. The resource vector \cref{eq:resourcevector} and the finite-shot propagation formulas (\cref{eq:paulivar,eq:energyvar,eq:freqvar}) are likewise generic to any Pauli-decomposed Hamiltonian. Only the \emph{values} taken by $N_P$, the transformed density, and the Gershgorin ratio are specific to a given mesh, and those are what this section measures.
 
 \subsection{Two- and three-dimensional scaling}
 \label{sec:dim-scaling}
@@ -944,11 +1054,11 @@ The mesh is a scalar grid of point masses connected by nearest-neighbor springs,
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{dimension_scaling.pdf}
-\caption{Transformed-operator density and nonzero Pauli-term count for consistent mass, 1D chains versus the 2D and 3D grids of \cref{tab:dimscaling}. The density-decline onset shifts to larger $N$ as dimension increases: 1D declines by $N\!\approx\!32$--64, 2D not until $N\!=\!1024$, and 3D remains 91\% dense at the largest tested size.}
+\caption{Transformed-operator density and nonzero Pauli-term count for consistent mass, 1D chains versus the 2D and 3D grids of \cref{tab:dimscaling}. The density-decline onset shifts to larger $N$ as dimension increases: 1D declines by $N\!\approx\!32$--64, 2D only marginally by $N\!=\!256$ and clearly by $N\!=\!1024$, and 3D remains 91\% dense at the largest tested size.}
 \label{fig:dimscaling}
 \end{figure}
 
-Lumped mass remains markedly sparser than consistent mass at every tested size in every dimension, as in the 1D case. For consistent mass, the informative comparison is at matched $N$: at $N=1024$, 2D density has fallen to 0.433 while 3D remains at 0.908---the same DOF count, a visibly different regime. This is consistent with nested-dissection theory: 2D separator fill scales as $O(\sqrt N)$ and 3D as $O(N^{2/3})$ \cite{GeorgeNg1988}, so the onset of sparsity-recovering behavior is expected to shift to larger $N$ as dimension increases, and 3D should lag furthest behind. Fitting a single power law to the full tested range gives an increasing but modest exponent (1D $\approx\!1.66$, 2D $\approx\!1.69$, 3D $\approx\!1.79$); because density has not yet stabilized into a clean power-law regime in any dimension over the tested sizes, these exponents are reported as illustrative fits, not asymptotic laws, exactly as \cref{sec:results} already cautions for the 1D case. The Gershgorin ratio remains mild in every case tested (1.04--1.14), consistent with the 1D finding of \cref{fig:gersh} that Gershgorin looseness is not the dominant issue.
+Lumped mass remains markedly sparser than consistent mass at every tested size in every dimension, as in the 1D case. Densities of exactly 1.000 in \cref{tab:dimscaling} are rounded: the 2D $N=64$ and 3D $N=128$ operators carry 2079 and 8251 nonzero Pauli terms against the real-symmetric maxima 2080 and 8256, the small deficits being accidental cancellations rather than structural sparsity. For consistent mass, the informative comparison is at matched $N$: at $N=1024$, 2D density has fallen to 0.433 while 3D remains at 0.908---the same DOF count, a visibly different regime. This is consistent with nested-dissection theory: 2D separators have size $O(\sqrt N)$ and 3D $O(N^{2/3})$, giving fill $O(N\log N)$ and $O(N^{4/3})$ respectively \cite{GeorgeNg1988}, so the onset of sparsity-recovering behavior is expected to shift to larger $N$ as dimension increases, and 3D should lag furthest behind. Fitting a single power law for the nonzero Pauli count over the full tested range gives an increasing but modest exponent (1D $\approx\!1.66$, 2D $\approx\!1.69$, 3D $\approx\!1.79$; the 3D fit rests on only three sizes). These are full-range fits: restricting the 1D fit to $N\ge16$ gives 1.48 instead, which is the figure quoted in \cref{sec:complexity}, and the 1D local exponent continues to fall with $N$. Because density has not yet stabilized into a clean power-law regime in any dimension over the tested sizes, these exponents are reported as illustrative fits, not asymptotic laws, exactly as \cref{sec:results} already cautions for the 1D case. The Gershgorin ratio remains mild in every case tested (1.04--1.14), consistent with the 1D finding of \cref{fig:gersh} that Gershgorin looseness is not the dominant issue.
 
 Declining density is a fractional effect: the absolute nonzero Pauli-term count continues to grow in every dimension tested (\cref{tab:dimscaling}), so this does not indicate that the measurement burden diminishes with $N$. Density and $N_P$ are structural properties of the operator, not complexities in themselves; they separately drive the space row and the measurement term of the time row in \cref{tab:complexity}. The practical relevance of eventual sparsity recovery is also limited by scale. For an idealized cubic mesh, the graph diameter (maximum node-to-node hop distance) is $d(N^{1/d}-1)$ in $d$ dimensions; matching the diameter of the $N=128$ 1D chain already tested (127 hops) would require an idealized square mesh of $N\approx4{,}160$ (12 qubits) or an idealized cubic mesh of $N\approx81{,}000$ (16.3 qubits). This is an illustrative order-of-magnitude estimate for a regular cubic mesh, not a claim about arbitrary geometries, but it places any such recovery for 3D structures far beyond near-term hardware and, likely, beyond the regime in which classical simulation of the whitened operator itself remains convenient.
 
@@ -964,7 +1074,7 @@ For a degenerate pair, any rotation of the two eigenvectors within their shared 
 \MAC_{aa}^{(M)}(\theta)=\cos^2\theta,
 \label{eq:macrotation}
 \end{equation}
-exactly---confirmed numerically to machine precision. \Cref{fig:degeneracy} shows this degrading from $1$ to $0.5$ at $\theta=45^\circ$ to essentially $0$ at $\theta=90^\circ$, which by conventional MAC thresholds would be flagged as a severe mismatch, even though the physical subspace never changed. The subspace-angle diagnostic \cref{eq:subspace} is stated in the whitened representation, where the isometry of Proposition~1 makes a plain transpose product equivalent to an $\M$-weighted one; written directly in the physical representation, it evaluates $\varepsilon_{\mathrm{sub}}$ between $\mathrm{span}(\ph_a,\ph_b)$ and its rotated copy via $(\mathbf Y_C)^T\M\mathbf Y_Q$. Since the rotation is an isometry of the shared subspace, this overlap matrix is exactly a $2\times2$ rotation matrix, whose singular values are exactly one, giving $\varepsilon_{\mathrm{sub}}=0$ for every $\theta$. The measured values stay at the eigensolver's numerical floor ($\sim\!3\times10^{-8}$) across the full sweep.
+exactly---confirmed numerically to machine precision. \Cref{fig:degeneracy} shows this degrading from $1$ to $0.5$ at $\theta=45^\circ$ to essentially $0$ at $\theta=90^\circ$, which by conventional MAC thresholds would be flagged as a severe mismatch, even though the physical subspace never changed. The subspace-angle diagnostic \cref{eq:subspace} is stated in the whitened representation, where the isometry of Proposition~1 makes a plain transpose product equivalent to an $\M$-weighted one; written directly in the physical representation, it evaluates $\varepsilon_{\mathrm{sub}}$ between $\mathrm{span}(\ph_a,\ph_b)$ and its rotated copy via $(\mathbf Y_C)^T\M\mathbf Y_Q$. Since the rotation is an isometry of the shared subspace, this overlap matrix is exactly a $2\times2$ rotation matrix, whose singular values are exactly one, giving $\varepsilon_{\mathrm{sub}}=0$ for every $\theta$. The measured values stay at the eigensolver's numerical floor ($\sim\!3\times10^{-8}$) across the full sweep. Since $\varepsilon_{\mathrm{sub}}=0$ follows analytically, this confirms the implementation rather than discovering the behaviour; the informative case, a \emph{near}-degenerate pair under a physical perturbation where $\varepsilon_{\mathrm{sub}}$ is small but nonzero, is not exercised here.
 
 \begin{figure}[t]
 \centering
@@ -986,7 +1096,7 @@ No theorem is claimed for global convergence of the parameterized circuit optimi
 
 \subsection{Why heuristic composite penalties are unsafe}
 
-A weighted cost $E+\gamma\sigma_H^2+\zeta\ell_p$ changes the optimization landscape without a universal conversion between energy, residual, and leakage. An adaptive multiplicative $\beta$ rule can overshoot the minimum spectral threshold and amplify projector error. Temporal overlap and frequency penalties can suppress genuine damage-induced changes. A scalar exponential integrity score can conceal a severe failure in one component behind good performance in another. Finally, a mixed-dimension ``information efficiency'' is uninterpretable without a reference task and cost model.
+A weighted cost $E+\gamma\sigma_H^2+\zeta\ell_p$ changes the optimization landscape without a universal conversion between energy, residual, and leakage. An adaptive multiplicative $\beta$ rule is uncontrolled in both directions: it can stall just above the spectral threshold, where \cref{eq:dkbound} is vacuous, or grow without reference to $G_r$, where the certificate degrades linearly. Temporal overlap and frequency penalties can suppress genuine damage-induced changes. A scalar exponential integrity score can conceal a severe failure in one component behind good performance in another. Finally, a mixed-dimension ``information efficiency'' is uninterpretable without a reference task and cost model.
 
 The proposed framework therefore uses theorem-based penalties, constrained diagnostics, independent epoch solutions, non-aggregated validation vectors, and raw resource counts.
 
@@ -1002,7 +1112,7 @@ For the tested chain models, Gershgorin looseness is modest. The more serious is
 \end{aligned}}
 \label{eq:trilemma}
 \end{equation}
-in which only the physical fidelity of $\M$ and the resulting measurement cost are genuinely in opposition; the intermediate density of $\A$ is induced, and is further modulated by DOF ordering and coefficient thresholding. Lumped mass may be cheaper quantum mechanically but can perturb high modes; consistent mass may be more faithful but measurement-heavy. A credible study must report both modal discretization error and quantum resource consequences.
+in which only the physical fidelity of $\M$ and the resulting measurement cost are genuinely in opposition; the intermediate density of $\A$ is induced, and is further modulated by DOF ordering and coefficient thresholding. Lumped mass may be cheaper quantum mechanically but can perturb high modes; consistent mass may be more faithful but measurement-heavy. A credible study must report both modal discretization error and quantum resource consequences. For the chains studied here the discretization penalty is small precisely where the quantum method operates. Taking consistent mass as the reference, the lumped model reproduces the first four frequencies to within 3.88\% at $N=16$, 0.25\% at $N=64$, and 0.06\% at $N=128$; the disagreement grows with mode index, reaching 4.9\% at mode $N/4$ and 42\% at the highest mode. Since the finite-shot RMSE of the fundamental is 2.45\% at $10^5$ shots per Pauli term (\cref{tab:shotfreq}), the extra fidelity bought by consistent mass at $N=128$ is roughly forty times smaller than the measurement noise it must be read through, while costing $2950$ Pauli terms against $576$. For low-mode targets at achievable shot budgets the expensive mass model is therefore not merely optional but unusable---an argument for the lumped operator and its $O(N\log N)$ term count of \cref{prop:lumped}, not for the consistent one.
 
 As an illustration, consider the $N=128$, $k=4$ consistent-mass chain of \cref{tab:scaling}. \Cref{tab:concrete} contrasts the two routes with order-of-magnitude figures.
 
@@ -1018,7 +1128,7 @@ Qubits & --- & 7\\
 Preprocessing & $O(N)$ & $O(N^2\log N)$\\
 Nonzero Pauli terms & --- & 2950\\
 Core work & ${\sim}1400$ matvecs & ${\sim}10^{11}$ circuits$^{\ddagger}$\\
-Wall time & ${<}1$\,s & ${\sim}10^{5}$\,s\\
+Wall time & ${<}1$\,s & ${\sim}3.5\times10^{5}$\,s\\
 \bottomrule
 \end{tabular}
 
@@ -1030,7 +1140,7 @@ The gap spans several orders of magnitude and is dominated by measurement, not p
 
 \subsection{Implications for structural health monitoring}
 
-The finite-shot damage result changes the interpretation of quantum modal strain energy. The expectation-value identity is mathematically valid, but it is not automatically practical. Detection requires resolving a small difference between two noisy ratios of expectation values. For baseline and damaged estimates $\widehat a_d/\widehat b_d$ and $\widehat a_0/\widehat b_0$, a first-order variance is
+The finite-shot damage result changes the interpretation of quantum modal strain energy. The expectation-value identity is mathematically valid and practically reachable, but only at a measurement cost that must be stated explicitly. Detection requires resolving a small difference between two noisy ratios of expectation values. For baseline and damaged estimates $\widehat a_d/\widehat b_d$ and $\widehat a_0/\widehat b_0$, a first-order variance is
 \begin{equation}
 \begin{aligned}
 \Var(\widehat\eta_d-\widehat\eta_0)
@@ -1058,25 +1168,25 @@ n_{\mathrm{loc}}\gtrsim
 }
 \label{eq:shotslocalize}
 \end{equation}
-where $V_{\Delta_D}$ is the per-shot variance coefficient of the score margin. The absolute-value signs are linearized at their exact signs. These expressions are design approximations, not finite-sample guarantees.
+where $V_{\Delta_D}$ is the per-shot variance coefficient of the score margin. The absolute-value signs are linearized at their exact signs. These expressions are design approximations, not finite-sample guarantees. They are also matched to the alternative rather than to the null: $D_e$ is a sum of absolute values, so under $D_e=0$ the estimator is folded and biased upward by $\sigma\sqrt{2/\pi}$ per term, and the nominal type-I error is not attained. A deployed test should calibrate its null by permutation rather than from \cref{eq:shotsdetect}.
 
 \begin{table*}[t]
 \centering
-\caption{Delta-method shots per Pauli term for the six-DOF damage example ($\alpha=0.05$, 80\% power).}
+\caption{Delta-method shots per Pauli term for the six-DOF damage example ($\alpha=0.05$, 80\% power). In \cref{eq:shotsdetect,eq:shotslocalize} only, $\beta$ denotes the type-II error rate, not a deflation penalty; the detection criterion is two-sided and the localization criterion one-sided with a Bonferroni correction over the five intact competitors.}
 \label{tab:shotrequirements}
 \begin{tabular}{rrr}
 \toprule
 Stiffness loss & Detect damaged-element change & Localize against all five competitors\\
 \midrule
-2\%  & $1.32\times10^7$ & $1.27\times10^9$\\
-5\%  & $2.04\times10^6$ & $2.11\times10^8$\\
-10\% & $4.82\times10^5$ & $5.71\times10^7$\\
-20\% & $1.10\times10^5$ & $1.83\times10^7$\\
+2\%  & $2.55\times10^6$ & $1.52\times10^7$\\
+5\%  & $3.85\times10^5$ & $2.23\times10^6$\\
+10\% & $8.75\times10^4$ & $4.83\times10^5$\\
+20\% & $1.82\times10^4$ & $9.01\times10^4$\\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-The calculation uses the first four modes with equal weights, independent baseline/damaged numerator and denominator estimates, and independent element-score variances. It is conservative because beneficial shared-denominator covariance is ignored. For 10\% damage, $10^5$ shots per term give a localization signal-to-noise ratio of only 0.13, consistent with the observed 26\% success being only modestly above random guessing. Approximately $4.8\times10^5$ shots per term are required to detect the damaged-element score with 80\% power, whereas reliable family-wise localization requires roughly $5.7\times10^7$ per term. With 648 nonidentity operator-term settings across four modes, six elements, and two structural states, the latter corresponds to approximately $3.7\times10^{10}$ circuit shots under the independent baseline. This suggests that covariance-aware joint measurement and direct estimation of change observables are not optional refinements but central algorithmic requirements.
+The calculation uses the first four modes with equal weights, independent baseline/damaged numerator and denominator estimates, and independent element-score variances. It is conservative because beneficial shared-denominator covariance is ignored. For 10\% damage, $10^5$ shots per term give a localization signal-to-noise ratio of 1.44, consistent with the observed 84.5\% success. Approximately $8.7\times10^4$ shots per term are required to detect the damaged-element score with 80\% power, whereas family-wise localization against all five intact competitors requires roughly $4.8\times10^5$ per term. With 648 nonidentity operator-term settings across four modes, six elements, and two structural states, the latter corresponds to approximately $3.1\times10^{8}$ circuit shots under the independent baseline---four modal states measured to part-in-$10^3$ precision for a single binary maintenance decision. That figure counts every (operator, term) pair as a distinct setting and is therefore an upper bound. Each element operator's Pauli support is contained in the 19 nonidentity strings of $\widetilde\A$ itself, exactly so for the chains at $N\le16$ and to within 12\% of the union at $N=32$, and $\sum_e\Hq_e=\widetilde\A$; one measurement of those 19 strings per mode and structural state therefore serves all seven operators. Counting distinct settings instead gives $8\times19=152$ and ${\approx}7.3\times10^{7}$ shots. Re-using the records introduces precisely the numerator--denominator covariance that \cref{eq:ratiovar} discards, so the two figures bracket the achievable cost. Measurement therefore remains the dominant end-to-end cost even where the decision itself is reachable, which makes covariance-aware joint measurement and direct estimation of change observables the most promising levers on that cost.
 
 \subsection{End-to-end quantum advantage remains unestablished}
 
@@ -1095,7 +1205,7 @@ For the present benchmarks, classical methods are overwhelmingly preferable.
 \section{Limitations and research agenda}
 \label{sec:limitations}
 
-The main structural models remain one-dimensional chains, the most favorable case for Cholesky fill; \cref{sec:dimensions} reports an initial two- and three-dimensional scalar-mesh generalization confirming that densification does not improve, and appears later in $N$, as dimension increases. That study nonetheless uses regular scalar grids, not the block DOFs, irregular topology, constraints, and material heterogeneity of real bridges and buildings, and the measured exponents must not be extrapolated to such structures or to alternative DOF orderings and block-sparse formulations. Pauli decomposition is evaluated only under binary amplitude encoding. The finite-shot study uses independent Pauli measurements and exact input states; it does not include circuit noise, state-preparation error, grouped covariance, or device calibration. The damage study uses stiffness-only damage and no environmental variability. Cholesky timings are platform-specific, while the structural sparsity counts are more portable.
+The main structural models remain one-dimensional chains, the most favorable case for Cholesky fill; \cref{sec:dimensions} reports an initial two- and three-dimensional scalar-mesh generalization confirming that densification does not improve, and appears later in $N$, as dimension increases. That study nonetheless uses regular scalar grids, not the block DOFs, irregular topology, constraints, and material heterogeneity of real bridges and buildings, and the measured exponents must not be extrapolated to such structures or to alternative DOF orderings and block-sparse formulations. Pauli decomposition is evaluated only under binary amplitude encoding. The finite-shot study uses independent Pauli measurements and exact input states; it does not include circuit noise, state-preparation error, grouped covariance, or device calibration. The damage study uses stiffness-only damage and no environmental variability; long-term monitoring campaigns show that environmental effects can rival or exceed damage-induced modal changes \cite{PeetersZ24_2001,Maeck2001}. It also supplies the damaged mode shapes as exact eigenvectors of a known damaged operator, so it isolates measurement variance and does not model the identification problem: in deployment the damaged states would be obtained from measured response data, not from an eigensolve of the very model being inferred, whereas the element operators $\Hq_e$ of \cref{eq:He} are correctly built from the baseline model alone. Cholesky timings are platform-specific, while the structural sparsity counts are more portable.
 
 The next high-impact study should combine:
 \begin{enumerate}[label=(\roman*)]
@@ -1112,7 +1222,7 @@ The next high-impact study should combine:
 
 This paper establishes a stricter evaluation standard for variational quantum modal analysis. The mass-orthonormal Cholesky map is physically consistent, but its preprocessing and densification costs are not negligible. Gershgorin bounds can certify padding without fixing the optimizer scale. Higher-mode penalties admit an exact threshold, and approximate-projector perturbation theory shows why oversized penalties are dangerous. Variance and leakage should be diagnostics or constrained refinements, not arbitrarily weighted additions to the primary energy. Temporal mode identity should be assigned after independent eigensolution so that continuity cannot mask damage.
 
-The expanded experiments show both promise and difficulty. Increasing circuit depth recovers small exact-state modal problems, while a shallow ansatz fails systematically despite sufficient qubit dimension. In the tested chains, consistent mass substantially increases Hamiltonian density and Pauli count, and an initial two- and three-dimensional generalization shows this effect worsening, not improving, with spatial dimension, while also validating a subspace diagnostic on a genuine degenerate pair unavailable in one dimension. Finite-shot frequency and damage estimates remain costly, with the lowest mode particularly sensitive to sampling variance. These results do not establish quantum advantage. They identify the mathematical conditions and resource bottlenecks that a future structural quantum algorithm must overcome.
+The expanded experiments show both promise and difficulty. Increasing circuit depth recovers small exact-state modal problems, while a shallow ansatz fails systematically despite sufficient qubit dimension. In the tested chains, consistent mass substantially increases Hamiltonian density and Pauli count, and an initial two- and three-dimensional generalization shows this effect worsening, not improving, with spatial dimension, while also validating a subspace diagnostic on a genuine degenerate pair unavailable in one dimension. Finite-shot frequency and damage estimates remain costly---localizing a 10\% stiffness loss with certified family-wise confidence needs ${\sim}10^{8}$ circuit executions---with the lowest mode particularly sensitive to sampling variance. These results do not establish quantum advantage. They identify the mathematical conditions and resource bottlenecks that a future structural quantum algorithm must overcome.
 
 The main conclusion is therefore precise: qubits are necessary to encode the state, but spectrally valid modes, expressive circuits, sparse observables, and decision-level measurement precision are necessary to solve the engineering problem.
 
@@ -1120,13 +1230,14 @@ The main conclusion is therefore precise: qubits are necessary to encode the sta
 The accompanying archive contains the complete LaTeX source, bibliography, generated figures, CSV results, and Python scripts required to reproduce the exact-state, scaling, trainability, finite-shot, and damage-localization studies, together with the two- and three-dimensional generalization and degeneracy-diagnostic study of \cref{sec:dimensions}.
 
 \section*{Conflict of Interest}
-The author declares no conflict of interest.
+The authors declare no conflict of interest.
 
 % \section*{Acknowledgment}
 
 
 \appendices
 \section{Representative finite-element matrices}
+These are quoted for reference only. Every model solved in this paper is a scalar spring--mass chain or grid with one degree of freedom per node; no truss or beam element is used in any experiment.
 For a two-dimensional truss element with $c=\cos\theta$ and $s=\sin\theta$,
 \begin{equation}
 \K_e=\frac{EA}{L}
@@ -1194,7 +1305,9 @@ o&\le10^{-8}, &
 \end{aligned}
 \label{eq:exampletolerances}
 \end{equation}
-These values are numerical verification tolerances, not universal SHM thresholds. They accept all four depth-2 exact-state modes and reject the depth-1 results. Field applications must replace them with tolerances calibrated to model discrepancy, environmental variability, and decision consequences.
+These values are numerical verification tolerances, not universal SHM thresholds; several are unattainable at any sampling budget, the variance bound $\sigma_H^2\le10^{-10}$ most obviously so, and $\langle\Hq_p^2\rangle$ carries its own measurement cost that \cref{eq:resourcevector} does not itemize. They accept all four depth-2 exact-state modes and reject the depth-1 results. Field applications must replace them with tolerances calibrated to model discrepancy, environmental variability, and decision consequences.
+
+Algorithm~\ref{alg:certvqe} was executed on this benchmark under the quantum-only Gershgorin policy \cref{eq:globalUr}, so that no auxiliary classical eigensolve enters the procedure. With $s_t=U_G$ the certified bound is $U_r=1$, the radius $\delta_j$ is the residual $\sigma_{H,j}$ returned by the run itself, and $\tau=10^{-3}$. At depth 2 the resulting penalties lie between $0.68$ and $0.98$: they satisfy the threshold of Theorem~1 by construction rather than by tuning, and they adapt to solution quality as intended---at depth 1, where the extracted modes are poor and $\sigma_{H,j}$ is correspondingly large, the same rule returns $0.81$ to $1.02$, automatically widening the margin to absorb the worse projectors. They are also three to four and a half times smaller than the ad hoc common penalty $\beta=3$ used for comparison. Measured against \cref{eq:betastar} rather than against the bare threshold, the Gershgorin policy places the excess $U_r-\varepsilon_r+\delta_j+\tau$ at $2.0$, $2.9$ and $4.5$ times $G_r$ for targets $r=4,3,2$, i.e. always past saturation and never in the divergent regime, at the cost of a Davis--Kahan certificate loosened by factors of $1.3$, $1.8$ and $3.2$ relative to the optimum. Conservatism in the bound policy is what buys this margin. At depth 2 the certified run recovers all four modes with frequency error below $10^{-12}$\%, mass-weighted MAC equal to one to twelve digits, prior-mode overlap below $4\times10^{-15}$, and padding leakage below $10^{-15}$, meeting the acceptance set above with several orders of margin; at depth 1 it fails for the ansatz reasons of \cref{rem:depth}, not because of the penalty rule.
 
 \section{Exact relation between projector error and state angle}
 For normalized vectors $u$ and $\widehat u$, the rank-one projector difference satisfies
@@ -1214,5 +1327,5 @@ which gives a direct rule for balancing penalty margin against the quality of pr
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
-\EOD
+\ifdefined\TQE\else\EOD\fi
 \end{document}

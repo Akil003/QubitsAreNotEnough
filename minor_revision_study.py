@@ -203,12 +203,22 @@ def _padded_element_operators(
     return operators
 
 
-def damage_shot_requirement_study() -> pd.DataFrame:
+def damage_shot_requirement_study(convention: str = "baseline") -> pd.DataFrame:
     """Estimate shots needed for modal-energy detection and localization.
+
+    ``convention`` selects the element stiffnesses used to build the numerator
+    operators on the damaged structure: ``"baseline"`` (Ke0, the deployable and
+    reported case) or ``"oracle"`` (Ke^d, retained only to reproduce the manuscript's
+    Remark 3 sensitivity case). This calculation is fully deterministic, so both
+    variants reproduce exactly.
 
     Assumptions
     -----------
     * First four exact modes of the six-DOF benchmark are used.
+    * Element-energy numerators on both the baseline and the damaged structure are
+      built from the BASELINE element stiffnesses, following the standard modal-
+      strain-energy convention; the damaged element stiffness is the unknown and
+      cannot be used to assemble a measurable operator.
     * Every non-identity Pauli term receives the same number ``n`` of shots.
     * Numerator and denominator operators, baseline and damaged states, and
       different element scores are treated as independent. This is conservative
@@ -234,8 +244,12 @@ def damage_shot_requirement_study() -> pd.DataFrame:
     for severity in (0.02, 0.05, 0.10, 0.20):
         damaged = rs.exact_modal_data(damage_story=2, damage_fraction=severity)
         mass_d, _, stiffness_d, _, _, _, modes_d, scale_d, hamiltonian_d = damaged
+        # Baseline element stiffnesses, not the damaged ones, build the operators
+        # measured on the damaged structure -- see the note in
+        # revision_study.damage_shot_study.
+        stiffness_numerator = stiffness_0 if convention == "baseline" else stiffness_d
         element_d = _padded_element_operators(
-            mass_d, stiffness_d, scale_d, hamiltonian_d.shape[0]
+            mass_d, stiffness_numerator, scale_d, hamiltonian_d.shape[0]
         )
         pauli_hd = rs.pauli_coefficients(hamiltonian_d, tol=1e-12)
         pauli_ed = [rs.pauli_coefficients(operator, tol=1e-12) for operator in element_d]
@@ -319,13 +333,17 @@ def damage_shot_requirement_study() -> pd.DataFrame:
         )
 
     dataframe = pd.DataFrame(rows)
-    dataframe.to_csv(DATA / "damage_shot_requirements.csv", index=False)
+    suffix = "" if convention == "baseline" else "_oracle_convention"
+    dataframe.to_csv(DATA / f"damage_shot_requirements{suffix}.csv", index=False)
     return dataframe
 
 
 def main() -> None:
     measurement = measurement_floor_study()
     damage = damage_shot_requirement_study()
+    # Remark 3 sensitivity case. Fully deterministic, so it reproduces exactly and
+    # cannot perturb the reported baseline figures above.
+    damage_shot_requirement_study("oracle")
     summary = {
         "qwc_floor_mode1_at_100k_pct": float(
             measurement[

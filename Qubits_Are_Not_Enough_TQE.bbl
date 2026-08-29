@@ -30,9 +30,14 @@ A.~K. Chopra, \emph{Dynamics of Structures: Theory and Applications to
 D.~J. Ewins, \emph{Modal Testing: Theory, Practice and Application},
   2nd~ed.\hskip 1em plus 0.5em minus 0.4em\relax Research Studies Press, 2000.
 
+\bibitem{FarrarWorden2007}
+C.~R. Farrar and K.~Worden, ``An introduction to structural health
+  monitoring,'' \emph{Philosophical Transactions of the Royal Society A}, vol.
+  365, no. 1851, pp. 303--315, 2007.
+
 \bibitem{FarrarWorden2012}
-C.~R. Farrar and K.~Worden, \emph{Structural Health Monitoring: A Machine
-  Learning Perspective}.\hskip 1em plus 0.5em minus 0.4em\relax Wiley, 2012.
+------, \emph{Structural Health Monitoring: A Machine Learning
+  Perspective}.\hskip 1em plus 0.5em minus 0.4em\relax Wiley, 2012.
 
 \bibitem{Peruzzo2014}
 A.~Peruzzo, J.~McClean, P.~Shadbolt, M.-H. Yung, X.-Q. Zhou, P.~J. Love,
@@ -44,6 +49,22 @@ A.~Peruzzo, J.~McClean, P.~Shadbolt, M.-H. Yung, X.-Q. Zhou, P.~J. Love,
 J.~R. McClean, J.~Romero, R.~Babbush, and A.~Aspuru-Guzik, ``The theory of
   variational hybrid quantum-classical algorithms,'' \emph{New Journal of
   Physics}, vol.~18, no.~2, p. 023023, 2016.
+
+\bibitem{Preskill2018}
+J.~Preskill, ``Quantum computing in the {NISQ} era and beyond,''
+  \emph{Quantum}, vol.~2, p.~79, 2018.
+
+\bibitem{Cerezo2021}
+M.~Cerezo, A.~Arrasmith, R.~Babbush, S.~C. Benjamin, S.~Endo, K.~Fujii, J.~R.
+  McClean, K.~Mitarai, X.~Yuan, L.~Cincio, and P.~J. Coles, ``Variational
+  quantum algorithms,'' \emph{Nature Reviews Physics}, vol.~3, pp. 625--644,
+  2021.
+
+\bibitem{Tilly2022}
+J.~Tilly, H.~Chen, S.~Cao, D.~Picozzi, K.~Setia, Y.~Li, E.~Grant, L.~Wossnig,
+  I.~Rungger, G.~H. Booth, and J.~Tennyson, ``The variational quantum
+  eigensolver: A review of methods and best practices,'' \emph{Physics
+  Reports}, vol. 986, pp. 1--128, 2022.
 
 \bibitem{Higgott2019}
 O.~Higgott, D.~Wang, and S.~Brierley, ``Variational quantum computation of
@@ -80,6 +101,17 @@ A.~George and E.~Ng, ``On the complexity of sparse {QR} and {LU} factorization
 C.~Davis and W.~M. Kahan, ``The rotation of eigenvectors by a perturbation.
   iii,'' \emph{SIAM Journal on Numerical Analysis}, vol.~7, no.~1, pp. 1--46,
   1970.
+
+\bibitem{Zhang2022}
+D.-B. Zhang, B.-L. Chen, Z.-H. Yuan, and T.~Yin, ``Variational quantum
+  eigensolvers by variance minimization,'' \emph{Chinese Physics B}, vol.~31,
+  no.~12, p. 120301, 2022.
+
+\bibitem{Kandala2017}
+A.~Kandala, A.~Mezzacapo, K.~Temme, M.~Takita, M.~Brink, J.~M. Chow, and J.~M.
+  Gambetta, ``Hardware-efficient variational quantum eigensolver for small
+  molecules and quantum magnets,'' \emph{Nature}, vol. 549, no. 7671, pp.
+  242--246, 2017.
 
 \bibitem{McClean2018}
 J.~R. McClean, S.~Boixo, V.~N. Smelyanskiy, R.~Babbush, and H.~Neven, ``Barren
@@ -141,5 +173,20 @@ O.~Crawford, B.~van Straaten, D.~Wang, T.~Parks, E.~Campbell, and S.~Brierley,
 \bibitem{PleschBrukner2011}
 M.~Plesch and {\v{C}}.~Brukner, ``Quantum-state preparation with universal gate
   decompositions,'' \emph{Physical Review A}, vol.~83, no.~3, p. 032302, 2011.
+
+\bibitem{Endo2023}
+S.~Endo, Z.~Cai, S.~C. Benjamin, and X.~Yuan, ``Hybrid quantum-classical
+  algorithms and quantum error mitigation,'' \emph{Journal of the Physical
+  Society of Japan}, vol.~90, no.~3, p. 032001, 2021.
+
+\bibitem{PeetersZ24_2001}
+B.~Peeters and G.~De~Roeck, ``One-year monitoring of the {Z24}-bridge:
+  Environmental effects versus damage events,'' \emph{Earthquake Engineering \&
+  Structural Dynamics}, vol.~30, no.~2, pp. 149--171, 2001.
+
+\bibitem{Maeck2001}
+J.~Maeck, B.~Peeters, and G.~De~Roeck, ``Damage identification on the {Z24}
+  bridge using vibration monitoring,'' \emph{Smart Materials and Structures},
+  vol.~10, no.~3, pp. 512--517, 2001.
 
 \end{thebibliography}

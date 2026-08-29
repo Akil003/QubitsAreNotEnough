@@ -32,6 +32,7 @@ Written in a separate subdirectory to keep the project root uncluttered.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -249,9 +250,35 @@ def degeneracy_demo(n_side: int = 4) -> pd.DataFrame:
     return df
 
 
+def _fit_exponents(df_hd: pd.DataFrame) -> dict:
+    """Power-law exponents of the consistent-mass Pauli count, per dimension.
+
+    These are quoted in Sec. VIII-B alongside the 1D value from revision_study, and are
+    persisted here so that every reported exponent has a generator.
+    """
+    out = {}
+    df_1d = pd.read_csv(PARENT / "revision_data" / "hamiltonian_scaling.csv")
+    g1 = df_1d[df_1d.mass_type == "consistent"].sort_values("dof")
+    series = {"1D": (g1.dof.to_numpy(float), g1.pauli_terms.to_numpy(float))}
+    for dim in ("2D", "3D"):
+        g = df_hd[(df_hd.dimension == dim) & (df_hd.mass_type == "consistent")].sort_values("dof")
+        series[dim] = (g.dof.to_numpy(float), g.pauli_terms.to_numpy(float))
+    for dim, (n, y) in series.items():
+        out[f"pauli_exponent_{dim}_full_range"] = float(np.polyfit(np.log(n), np.log(y), 1)[0])
+        out[f"n_points_{dim}"] = int(len(n))
+    m = series["1D"][0] >= 16
+    out["pauli_exponent_1D_n_ge_16"] = float(
+        np.polyfit(np.log(series["1D"][0][m]), np.log(series["1D"][1][m]), 1)[0])
+    (DATA / "dimension_fit_statistics.json").write_text(json.dumps(out, indent=2))
+    for k, v in out.items():
+        print(f"[dim-fit] {k} = {v}")
+    return out
+
+
 def main() -> None:
     df_scale = scaling_sweep()
     _comparison_figure(df_scale)
+    _fit_exponents(df_scale)
     degeneracy_demo()
 
 
