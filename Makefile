@@ -3,7 +3,7 @@ PDFLATEX ?= pdflatex
 BIBTEX ?= bibtex
 MAIN = Qubits_Are_Not_Enough_TQE
 
-.PHONY: all manuscript manuscript-tqe study validate clean
+.PHONY: all manuscript manuscript-tqe supplementary study validate clean
 
 all: manuscript
 
@@ -19,11 +19,18 @@ manuscript:
 # IEEE TQE layout (IEEEtran.cls) from the same source, written to a separate file so
 # the two never overwrite each other. Not in the manifest; build on demand.
 TQEOUT = $(MAIN)_IEEEtran
+SUPP   = $(MAIN)_supplementary
 manuscript-tqe:
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(TQEOUT) "\def\TQE{}\input{$(MAIN)}"
 	$(BIBTEX) $(TQEOUT)
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(TQEOUT) "\def\TQE{}\input{$(MAIN)}"
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(TQEOUT) "\def\TQE{}\input{$(MAIN)}"
+
+supplementary:
+	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(SUPP).tex
+	$(BIBTEX) $(SUPP)
+	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(SUPP).tex
+	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(SUPP).tex
 
 study:
 	$(PYTHON) reproduce_study.py

@@ -12,6 +12,11 @@ from pathlib import Path
 from typing import Callable
 
 import matplotlib.pyplot as plt
+
+# IEEE prohibits Type 3 fonts in submitted PDFs. Matplotlib's default pdf.fonttype is 3;
+# 42 emits TrueType instead. Must be set before any figure is created.
+plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["ps.fonttype"] = 42
 import numpy as np
 import pandas as pd
 from scipy.linalg import cholesky, eigh, solve_triangular

@@ -37,6 +37,11 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+
+# IEEE prohibits Type 3 fonts in submitted PDFs. Matplotlib's default pdf.fonttype is 3;
+# 42 emits TrueType instead. Must be set before any figure is created.
+plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["ps.fonttype"] = 42
 import numpy as np
 import pandas as pd
 from scipy.linalg import eigh
@@ -66,10 +71,18 @@ def _local_blocks(k_val: float, m_val: float, mass_type: str):
     return ke2, me2
 
 
-def _assemble_grid_KM(shape: tuple[int, ...], mass_type: str, heterogeneous: bool
-                       ) -> tuple[np.ndarray, np.ndarray]:
+def _assemble_grid_KM(shape: tuple[int, ...], mass_type: str, heterogeneous: bool,
+                      axis_scale: tuple[float, ...] | None = None,
+                      probe: tuple[int, float] | None = None
+                      ) -> tuple[np.ndarray, np.ndarray]:
     """Nearest-neighbor scalar spring/mass network on a d-dimensional grid.
     ``shape`` fixes the FULL node grid (no boundary conditions applied here).
+
+    ``axis_scale[d]`` multiplies the stiffness of every axis-``d`` spring; used by
+    near_degenerate_sweep() to break the square grid's i<->j reflection symmetry by
+    a controlled amount. ``probe=(edge_index, fraction)`` reduces one spring's
+    stiffness by ``fraction``, the fixed model discrepancy whose effect on the modes
+    is measured. Both default to None, reproducing the original assembly exactly.
     """
     dims = len(shape)
     n = int(np.prod(shape))
@@ -87,6 +100,7 @@ def _assemble_grid_KM(shape: tuple[int, ...], mass_type: str, heterogeneous: boo
     else:
         radial = np.zeros(shape)
 
+    edge = 0
     for d in range(dims):
         lo = [slice(None)] * dims
         hi = [slice(None)] * dims
@@ -99,6 +113,11 @@ def _assemble_grid_KM(shape: tuple[int, ...], mass_type: str, heterogeneous: boo
         for a, b, ra, rb in zip(a_ids, b_ids, r_a, r_b):
             r = 0.5 * (ra + rb)
             k_val = K0 * (1.0 - 0.35 * r)
+            if axis_scale is not None:
+                k_val *= axis_scale[d]
+            if probe is not None and edge == probe[0]:
+                k_val *= (1.0 - probe[1])
+            edge += 1
             m_val = (M0 / dims) * (1.0 - 0.20 * r)
             ke2, me2 = _local_blocks(k_val, m_val, mass_type)
             ids = (int(a), int(b))
@@ -122,13 +141,16 @@ def grid_MK(free_shape: tuple[int, ...], mass_type: str = "consistent",
     return M_full[np.ix_(free_ids, free_ids)], K_full[np.ix_(free_ids, free_ids)]
 
 
-def square_uniform_MK(n_side: int, mass_type: str = "consistent"
-                       ) -> tuple[np.ndarray, np.ndarray]:
+def square_uniform_MK(n_side: int, mass_type: str = "consistent",
+                      axis_scale: tuple[float, ...] | None = None,
+                      probe: tuple[int, float] | None = None
+                      ) -> tuple[np.ndarray, np.ndarray]:
     """Uniform square grid, free everywhere except a single pinned corner
     (0,0). Preserves the i<->j reflection symmetry needed for genuine
     degenerate mode pairs; used only for the degeneracy demonstration.
     """
-    M_full, K_full = _assemble_grid_KM((n_side, n_side), mass_type, heterogeneous=False)
+    M_full, K_full = _assemble_grid_KM((n_side, n_side), mass_type, heterogeneous=False,
+                                       axis_scale=axis_scale, probe=probe)
     free_ids = np.arange(1, M_full.shape[0])  # drop only the (0,0) corner
     return M_full[np.ix_(free_ids, free_ids)], K_full[np.ix_(free_ids, free_ids)]
 
@@ -250,6 +272,154 @@ def degeneracy_demo(n_side: int = 4) -> pd.DataFrame:
     return df
 
 
+ORDERING_CASES = (("2D", (16, 16)), ("3D", (8, 8, 8)))   # N = 256 and N = 512
+ORDERING_SEED = 20260623
+
+
+def _pattern(A: np.ndarray, rel: float = 1e-12) -> np.ndarray:
+    return np.abs(A) > rel * np.max(np.abs(A))
+
+
+def _bandwidth(A: np.ndarray) -> int:
+    i, j = np.nonzero(_pattern(A))
+    return int(np.max(np.abs(i - j)))
+
+
+def ordering_study() -> pd.DataFrame:
+    """Does a fill-reducing ordering help or hurt the measurement cost?
+
+    Classical sparse practice applies a fill-reducing permutation before factorizing.
+    This asks what that same step does to the Pauli representation. Three symmetric
+    permutations of the structural graph of K are compared at fixed N, fixed spatial
+    dimension and fixed physics (a symmetric permutation changes no eigenvalue):
+
+      natural  -- the locality-preserving row-major indexing used everywhere else;
+      rcm      -- reverse Cuthill-McKee, the fill-reducing ordering;
+      random   -- a fixed-seed scramble, included as the worst-case bracket.
+
+    Reported per ordering: the Cholesky fill nnz(L) of M, the density of the whitened
+    A, and the nonzero Pauli count. The lumped-mass rows are the controlling case:
+    there M is diagonal, so nnz(L) = N and the density of A are both invariant under
+    permutation, and any change in N_P is attributable to Pauli locality alone.
+    """
+    from scipy.linalg import cholesky
+    from scipy.sparse import csr_matrix
+    from scipy.sparse.csgraph import reverse_cuthill_mckee
+
+    rows = []
+    for dim_label, shape in ORDERING_CASES:
+        for mass_type in ("lumped", "consistent"):
+            M_nat, K_nat = grid_MK(shape, mass_type)
+            n = M_nat.shape[0]
+            nq = int(round(np.log2(n)))
+            perms = {
+                "natural": np.arange(n),
+                "rcm": np.asarray(reverse_cuthill_mckee(
+                    csr_matrix(_pattern(K_nat).astype(np.int8)), symmetric_mode=True)),
+                "random": np.random.default_rng(ORDERING_SEED).permutation(n),
+            }
+            for name, p in perms.items():
+                M, K = M_nat[np.ix_(p, p)], K_nat[np.ix_(p, p)]
+                L = cholesky(M, lower=True, check_finite=False)
+                A, _, _, _ = mass_whiten(M, K)
+                lam = float(np.max(np.abs(eigh(A, eigvals_only=True))))
+                pdf = pauli_coefficients(A / lam, tol=1e-10)
+                rows.append({
+                    "dimension": dim_label, "shape": str(shape), "mass_type": mass_type,
+                    "dof": n, "qubits": nq, "ordering": name,
+                    "bandwidth_K": _bandwidth(K),
+                    "nnz_L": int(np.count_nonzero(_pattern(L))),
+                    "density_A": float(np.count_nonzero(_pattern(A))) / A.size,
+                    "pauli_terms": int(len(pdf)),
+                    "pauli_bound_lumped": (nq + 2) * 2 ** (nq - 1),
+                    "pauli_bound_realsym": 2 ** (2 * nq - 1) + 2 ** (nq - 1),
+                })
+                print(f"[ordering] {dim_label} {mass_type:10s} {name:7s} "
+                      f"nnz_L={rows[-1]['nnz_L']:6d} density_A={rows[-1]['density_A']:.4f} "
+                      f"N_P={len(pdf):7d}")
+    df = pd.DataFrame(rows)
+    base = df[df.ordering == "natural"].set_index(["dimension", "mass_type"])["pauli_terms"]
+    df["pauli_ratio_to_natural"] = [
+        r.pauli_terms / base.loc[(r.dimension, r.mass_type)] for r in df.itertuples()]
+    df.to_csv(DATA / "ordering_study.csv", index=False)
+    return df
+
+
+N_SIDE_NEARDEG = 3          # 3x3 grid, corner pinned -> N = 8 = 2^3 free DOFs
+PROBE_FRACTION = 0.01       # fixed 1% stiffness loss on one spring
+CANONICAL_EDGE = 4          # interior axis-0 spring joining nodes (1,1) and (2,1)
+ASYMMETRIES = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05)
+
+
+def near_degenerate_sweep() -> pd.DataFrame:
+    """The informative degeneracy case: a *near*-degenerate pair.
+
+    degeneracy_demo() rotates an exactly degenerate pair inside its own subspace,
+    where MAC = cos^2(theta) and eps_sub = 0 hold analytically, so it confirms the
+    implementation rather than discovering behaviour. Here the pair is split by a
+    physical asymmetry (axis-0 springs stiffened by `delta`) and a *fixed* small
+    model discrepancy is applied at every gap. Holding the discrepancy constant
+    while the gap varies isolates the effect of the gap alone on each diagnostic
+    and on the Davis-Kahan certificate.
+
+    N = 8 = 2^3, so no spectral padding is needed and G_r reduces to the physical
+    gap eps_{r+1} - eps_r. The reflection i<->j is an exact symmetry of both K and
+    M and acts as diag(-1, +1) on the pair, so the degeneracy is symmetry-protected
+    rather than accidental. Every probe edge is swept, so the reported behaviour
+    cannot be an artefact of where the discrepancy was placed.
+    """
+    n = N_SIDE_NEARDEG
+    M0_, K0_ = square_uniform_MK(n, "consistent")
+    lam0 = eigh(K0_, M0_, eigvals_only=True)
+    r = int(np.argmin(np.diff(lam0) / lam0[1:]))
+    n_edges = 2 * n * (n - 1)
+    print(f"[near-deg] N={len(lam0)}  pair=({r},{r+1})  "
+          f"unperturbed rel gap={(lam0[r+1]-lam0[r])/lam0[r+1]:.2e}")
+
+    rows = []
+    for delta in ASYMMETRIES:
+        for edge in range(n_edges):
+            M_, K_ = square_uniform_MK(n, "consistent", axis_scale=(1.0 + delta, 1.0))
+            _, Kp = square_uniform_MK(n, "consistent", axis_scale=(1.0 + delta, 1.0),
+                                      probe=(edge, PROBE_FRACTION))
+            A, _, _, _ = mass_whiten(M_, K_)
+            Ap, _, _, _ = mass_whiten(M_, Kp)      # probe leaves M, hence L, unchanged
+            scale = float(np.max(eigh(A, eigvals_only=True)))
+            H, Hp = A / scale, Ap / scale
+            eps, U = eigh(H)
+            _, Uh = eigh(Hp)
+            norm_delta = float(np.max(np.abs(eigh(Hp - H, eigvals_only=True))))
+
+            G_r = float(eps[r + 1] - eps[r])       # no padding at N=8, so alpha does not bind
+            g_pair = float(min(eps[r] - eps[r - 1], eps[r + 2] - eps[r + 1]))
+            Y, Yh = U[:, r:r + 2], Uh[:, r:r + 2]
+            sv = np.clip(np.linalg.svd(Y.T @ Yh, compute_uv=False), -1.0, 1.0)
+            mac_r = float((U[:, r] @ Uh[:, r]) ** 2)
+            rows.append({
+                "delta": delta, "probe_edge": edge,
+                "canonical": edge == CANONICAL_EDGE,
+                "rel_gap": float((eps[r + 1] - eps[r]) / eps[r + 1]),
+                "norm_delta": norm_delta, "G_r": G_r, "g_pair": g_pair,
+                "mac_r": mac_r,
+                "mac_r1": float((U[:, r + 1] @ Uh[:, r + 1]) ** 2),
+                "eps_sub": float(np.sqrt(np.sum(1.0 - sv ** 2))),
+                "sin_individual": float(np.sqrt(max(1.0 - mac_r, 0.0))),
+                "sin_subspace": float(np.sqrt(max(1.0 - sv.min() ** 2, 0.0))),
+                "dk_individual": 2.0 * norm_delta / G_r,
+                "dk_subspace": 2.0 * norm_delta / g_pair,
+                # Weyl's precondition ||Delta|| < g/2 is exactly the condition
+                # 2||Delta||/g < 1, i.e. the bound is valid precisely when non-vacuous.
+                "weyl_ok_individual": bool(norm_delta < G_r / 2),
+                "weyl_ok_subspace": bool(norm_delta < g_pair / 2),
+            })
+    df = pd.DataFrame(rows)
+    df.to_csv(DATA / "near_degenerate_sweep.csv", index=False)
+    can = df[df.canonical]
+    print(can[["delta", "rel_gap", "mac_r", "eps_sub",
+               "dk_individual", "dk_subspace"]].to_string(index=False))
+    return df
+
+
 def _fit_exponents(df_hd: pd.DataFrame) -> dict:
     """Power-law exponents of the consistent-mass Pauli count, per dimension.
 
@@ -280,6 +450,17 @@ def main() -> None:
     _comparison_figure(df_scale)
     _fit_exponents(df_scale)
     degeneracy_demo()
+    near_degenerate_sweep()
+    ordering_study()
+
+    # Mirror the generated figures into the directory the manuscript reads, exactly as
+    # revision_study.main() does. Without this the copies under ../figures are manual and
+    # silently go stale: they were still Aug-9 Type-3 PDFs after the generators had moved on.
+    manuscript_figures = PARENT / "figures"
+    manuscript_figures.mkdir(exist_ok=True)
+    for source in FIG.glob("*"):
+        if source.suffix.lower() in {".pdf", ".png"}:
+            (manuscript_figures / source.name).write_bytes(source.read_bytes())
 
 
 if __name__ == "__main__":

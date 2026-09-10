@@ -1,6 +1,17 @@
 PDF: Qubits_Are_Not_Enough_TQE.pdf
-Pages: 19
-Encrypted: False
-Openable (PyMuPDF): True
-Likely scanned: False
-XFA present: False
+Pages: 22
+Page size: 576 x 782.929 pts
+PDF version: 1.7
+Encrypted: no
+Fonts: 46
+Type 3 fonts: 0   (IEEE requires 0)
+Non-embedded fonts: 0   (IEEE requires 0)
+
+PDF: Qubits_Are_Not_Enough_TQE_IEEEtran.pdf
+Pages: 21
+Page size: 612 x 792 pts (letter)
+PDF version: 1.7
+Encrypted: no
+Fonts: 43
+Type 3 fonts: 0   (IEEE requires 0)
+Non-embedded fonts: 0   (IEEE requires 0)

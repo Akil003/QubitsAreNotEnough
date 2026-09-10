@@ -20,6 +20,11 @@ import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+
+# IEEE prohibits Type 3 fonts in submitted PDFs. Matplotlib's default pdf.fonttype is 3;
+# 42 emits TrueType instead. Must be set before any figure is created.
+plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["ps.fonttype"] = 42
 import numpy as np
 import pandas as pd
 from scipy.linalg import cholesky, eigh, solve_triangular
@@ -393,7 +398,7 @@ def scaling_and_pauli_study() -> pd.DataFrame:
         ax.semilogx(g["dof"], g["gershgorin_ratio"], marker="o", label=f"{mt.capitalize()} mass")
     ax.axhline(1.0, linestyle="--", linewidth=1.0)
     ax.set_xlabel("Structural DOFs, $N$")
-    ax.set_ylabel(r"Gershgorin looseness, $s_G/\lambda_{\max}$")
+    ax.set_ylabel(r"Gershgorin looseness, $U_G/\lambda_{\max}$")
     ax.grid(True, alpha=0.25)
     ax.legend(frameon=False)
     fig.tight_layout()
@@ -412,6 +417,53 @@ def scaling_and_pauli_study() -> pd.DataFrame:
     fig.savefig(FIG / "whitening_density.pdf", bbox_inches="tight")
     fig.savefig(FIG / "whitening_density.png", dpi=250, bbox_inches="tight")
     plt.close(fig)
+    return df
+
+
+def generalized_quotient_comparison() -> pd.DataFrame:
+    """Operator-representation cost of the generalized Rayleigh quotient vs whitening.
+
+    The generalized quotient <psi|K|psi>/<psi|M|psi> avoids forming A = L^-1 K L^-T, so
+    it must measure K and M instead of A. This compares the three representations under
+    the identical coefficient threshold (1e-10) and the identical locality-preserving
+    indexing used everywhere else. Each operator is normalized by its own largest
+    eigenvalue so the absolute threshold means the same thing for all three.
+
+    This is a representation comparison only. No generalized-quotient solver is
+    implemented; the referee question it answers is about resource cost, not about
+    optimizer behaviour.
+    """
+    rows = []
+    for mass_type in ("lumped", "consistent"):
+        for n in (4, 8, 16, 32, 64, 128):
+            M, K, _ = chain_model(n, mass_type)
+            A, _, _, _ = mass_whiten(M, K)
+            out = {"mass_type": mass_type, "dof": n, "qubits": int(round(math.log2(n)))}
+            pdfs = {}
+            for name, op in (("K", K), ("M", M), ("A", A)):
+                lam = float(np.max(np.abs(eigh(op, eigvals_only=True))))
+                normed = op / lam
+                pdf = pauli_coefficients(normed, tol=1e-10)
+                pdfs[name] = pdf
+                nnz = int(np.count_nonzero(np.abs(op) > 1e-12 * np.max(np.abs(op))))
+                out[f"pauli_{name}"] = int(len(pdf))
+                out[f"density_{name}"] = nnz / op.size
+                out[f"qwc_{name}"] = qwc_groups(pdf) if n <= 64 else np.nan
+            out["pauli_KM"] = out["pauli_K"] + out["pauli_M"]
+            # Distinct circuit settings for the generalized quotient. A K-term and an
+            # M-term may share one setting when they commute qubit-wise, so the pooled
+            # grouping -- not qwc_K + qwc_M -- is the honest count.
+            out["qwc_KM"] = (
+                qwc_groups(pd.concat([pdfs["K"], pdfs["M"]], ignore_index=True))
+                if n <= 64 else np.nan
+            )
+            out["ratio_KM_over_A"] = out["pauli_KM"] / out["pauli_A"]
+            rows.append(out)
+            print(f"[gen-quotient] {mass_type:10s} N={n:4d}  N_P(K)={out['pauli_K']:5d} "
+                  f"N_P(M)={out['pauli_M']:5d}  sum={out['pauli_KM']:5d}  "
+                  f"N_P(A)={out['pauli_A']:5d}  ratio={out['ratio_KM_over_A']:.2f}")
+    df = pd.DataFrame(rows)
+    df.to_csv(DATA / "generalized_quotient_comparison.csv", index=False)
     return df
 
 
@@ -579,7 +631,9 @@ def trainability_depth_sweep() -> pd.DataFrame:
     circuits. It uses its own generator and does not touch the shared stream.
     """
     rng = np.random.default_rng(20260626)
+    boot = np.random.default_rng(20260627)   # separate stream, leaves the sweep untouched
     rows = []
+    samples: dict[tuple[int, int], np.ndarray] = {}
     for nqubits in range(2, 11):
         n = 2 ** nqubits
         M, K = chain_MK(n, "consistent")
@@ -596,6 +650,7 @@ def trainability_depth_sweep() -> pd.DataFrame:
                 yp = circ.state(theta + shift)
                 ym = circ.state(theta - shift)
                 grads.append(0.5 * (float(yp @ H @ yp) - float(ym @ H @ ym)))
+            samples[(nqubits, depth)] = np.asarray(grads)
             rows.append({"qubits": nqubits, "depth": depth,
                          "parameters": circ.n_parameters,
                          "gradient_variance": float(np.var(grads, ddof=1)),
@@ -604,13 +659,38 @@ def trainability_depth_sweep() -> pd.DataFrame:
             f"L={r['depth']} var={r['gradient_variance']:.3e}"
             for r in rows[-3:]))
     df = pd.DataFrame(rows)
+
+    # Bootstrap the slope of log Var[g] against n_q: resample the 80 gradient draws at
+    # each n_q, recompute the variance, refit. 2000 replicates. This gives the depth
+    # sweep the same uncertainty treatment the fixed-depth sweep already has.
+    def slope_ci(depth: int, nq_min: int = 2, reps: int = 2000) -> tuple[float, float, float]:
+        qs = [q for q in range(nq_min, 11) if (q, depth) in samples]
+        x = np.asarray(qs, dtype=float)
+        point = float(np.polyfit(
+            x, np.log([samples[(q, depth)].var(ddof=1) for q in qs]), 1)[0])
+        draws = np.empty(reps)
+        for r in range(reps):
+            y = []
+            for q in qs:
+                s = samples[(q, depth)]
+                y.append(s[boot.integers(0, s.size, s.size)].var(ddof=1))
+            draws[r] = np.polyfit(x, np.log(y), 1)[0]
+        lo, hi = (float(v) for v in np.quantile(draws, [0.025, 0.975]))
+        return point, lo, hi
+
+    ci_rows = []
+    for depth in sorted(df.depth.unique()):
+        for nq_min, label in ((2, "all"), (7, "nq>=7")):
+            pt, lo, hi = slope_ci(int(depth), nq_min)
+            ci_rows.append({"depth": int(depth), "range": label, "slope": pt,
+                            "ci_lo": lo, "ci_hi": hi})
+            print(f"[depth-sweep] L={depth} ({label}): slope {pt:+.3f}/qubit "
+                  f"95% CI [{lo:+.3f}, {hi:+.3f}]  (O(2^-n_q) reference -0.693)")
+    ci = pd.DataFrame(ci_rows)
+    df = df.merge(ci[ci.range == "all"][["depth", "slope", "ci_lo", "ci_hi"]],
+                  on="depth", how="left")
     df.to_csv(DATA / "trainability_depth_sweep.csv", index=False)
-    for depth, g in df.groupby("depth"):
-        g = g.sort_values("qubits")
-        slope = float(np.polyfit(g.qubits.to_numpy(float),
-                                 np.log(g.gradient_variance.to_numpy()), 1)[0])
-        print(f"[depth-sweep] L={depth}: exponential slope {slope:+.3f}/qubit "
-              f"(barren-plateau reference -0.693)")
+    ci.to_csv(DATA / "trainability_depth_sweep_ci.csv", index=False)
     return df
 
 
@@ -776,14 +856,22 @@ def finite_shot_frequency() -> pd.DataFrame:
     for shots in (100, 1000, 10000, 100000):
         for mode in range(4):
             estimates = []
+            # B3: the sqrt below clips a negative energy estimate to zero, which biases
+            # the frequency low. Count how often that happens so the table says whether
+            # a given row is a clean plug-in estimate or a clipped one. The comparison
+            # consumes no randomness, so the sampled values are unchanged.
+            clipped = 0
             prepared = prepare_operator(pdf, Yp[:, mode])
             for _ in range(400):
                 ehat = sample_prepared(prepared, shots, RNG)
+                if s * ehat < 0.0:
+                    clipped += 1
                 fhat = math.sqrt(max(s * ehat, 0.0)) / (2 * math.pi)
                 estimates.append(fhat)
             f0 = math.sqrt(lam[mode]) / (2 * math.pi)
             estimates = np.array(estimates)
             rows.append({"shots_per_pauli": shots, "mode": mode + 1, "f_exact": f0,
+                         "positivity_clip_fraction": clipped / 400.0,
                          "mean_f": float(np.mean(estimates)), "std_f": float(np.std(estimates, ddof=1)),
                          "rmse_pct": float(100*np.sqrt(np.mean((estimates-f0)**2))/f0),
                          "bias_pct": float(100*(np.mean(estimates)-f0)/f0)})
@@ -859,12 +947,16 @@ def damage_shot_study(convention: str = "baseline",
         for shots in (100, 1000, 10000, 100000):
             correct = 0
             margins = []
+            den_clipped = 0          # B3: denominator floor activations
+            den_total = 0
             for _ in range(200):
                 eta0 = np.zeros((6, 4))
                 etad = np.zeros((6, 4))
                 for mode in range(4):
                     den0 = sample_prepared(prep_H0[mode], shots, rng)
                     dend = sample_prepared(prep_Hd[mode], shots, rng)
+                    den_total += 2
+                    den_clipped += int(den0 < 1e-10) + int(dend < 1e-10)
                     for e in range(6):
                         eta0[e, mode] = sample_prepared(prep_e0[mode][e], shots, rng) / max(den0, 1e-10)
                         etad[e, mode] = sample_prepared(prep_ed[mode][e], shots, rng) / max(dend, 1e-10)
@@ -875,6 +967,7 @@ def damage_shot_study(convention: str = "baseline",
                 margins.append((di[2] - np.max(others)) / max(abs(di[2]), 1e-12))
             rows.append({"damage_fraction": severity, "shots_per_pauli": shots,
                          "localization_accuracy": correct / 200.0,
+                         "denominator_clip_fraction": den_clipped / den_total,
                          "median_normalized_margin": float(np.median(margins)),
                          "p10_margin": float(np.quantile(margins, 0.10))})
     df = pd.DataFrame(rows)
@@ -934,11 +1027,13 @@ def _scaling_exponents(scaling: pd.DataFrame) -> dict:
             "pauli_local_exponent_last_doubling": float(np.log2(y[-1] / y[-2]))}
 
 
-def _wilson_intervals(damage: pd.DataFrame, trials: int = 200) -> dict:
+def _wilson_intervals(damage: pd.DataFrame, trials: int = 200,
+                      prefix: str = "wilson") -> dict:
     """Wilson score intervals for the localization accuracies quoted in the text."""
     z = 1.959963984540054
     out = {}
-    for sev, shots in ((0.10, 100000), (0.10, 10000), (0.20, 100000), (0.02, 100000)):
+    for sev, shots in ((0.10, 100000), (0.10, 10000), (0.10, 1000),
+                       (0.20, 100000), (0.02, 100000)):
         row = damage[(damage.damage_fraction == sev) & (damage.shots_per_pauli == shots)]
         if row.empty:
             continue
@@ -946,7 +1041,7 @@ def _wilson_intervals(damage: pd.DataFrame, trials: int = 200) -> dict:
         d = 1.0 + z * z / trials
         c = (ph + z * z / (2 * trials)) / d
         h = z * math.sqrt(ph * (1 - ph) / trials + z * z / (4 * trials * trials)) / d
-        tag = f"wilson_{int(sev * 100)}pct_{shots}"
+        tag = f"{prefix}_{int(sev * 100)}pct_{shots}"
         out[f"{tag}_lo"] = 100.0 * max(c - h, 0.0)
         out[f"{tag}_hi"] = 100.0 * min(c + h, 1.0)
     return out
@@ -968,8 +1063,9 @@ def main() -> None:
     damage = damage_shot_study()
     # Remark 3 sensitivity case; dedicated generator, so the shared stream above and
     # therefore every reported number is unaffected by running it.
-    damage_shot_study("oracle", make_figure=False)
+    damage_oracle = damage_shot_study("oracle", make_figure=False)
     noise = stylized_noise_budget()
+    generalized_quotient_comparison()   # deterministic; no RNG consumed
 
     summary = {
         "gershgorin_ratio_range": [float(scaling.gershgorin_ratio.min()), float(scaling.gershgorin_ratio.max())],
@@ -1001,6 +1097,7 @@ def main() -> None:
         **gradient_stats,
         **_scaling_exponents(scaling),
         **_wilson_intervals(damage),
+        **_wilson_intervals(damage_oracle, prefix="wilson_oracle"),
     }
     (DATA / "revision_summary.json").write_text(json.dumps(summary, indent=2))
 

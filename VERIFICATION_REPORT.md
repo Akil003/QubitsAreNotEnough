@@ -1,10 +1,9 @@
 # Verification Report
 
 > **Scope.** This document records the original conversion of the manuscript to the TQE
-> template. The package has since been revised; see `notes/CORRECTNESS_REVIEW.md` for the
-> findings and the changes made in response, and `environment_versions.txt` for current
-> provenance. Facts below have been updated where the conversion-time statement no longer
-> holds.
+> template. The package has since been revised; see `environment_versions.txt` for current
+> provenance and `MANIFEST.sha256` for the artefact inventory. Facts below have been updated
+> where the conversion-time statement no longer holds.
 
 ## Source provenance
 

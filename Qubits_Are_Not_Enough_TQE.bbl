@@ -92,6 +92,10 @@ L.~Taliadouros, I.~G. Mavromatis, and I.~A. Kougioumtzoglou, ``Eigenvalue
   analysis of stochastic structural systems: A quantum computing approach,''
   \emph{Probabilistic Engineering Mechanics}, vol.~81, p. 103814, 2025.
 
+\bibitem{LeeKanno2023}
+Y.~Lee and K.~Kanno, ``Modal analysis on quantum computers via qubitization,''
+  arXiv:2307.07478 [quant-ph], 2023.
+
 \bibitem{GeorgeNg1988}
 A.~George and E.~Ng, ``On the complexity of sparse {QR} and {LU} factorization
   of finite-element matrices,'' \emph{SIAM Journal on Scientific and
@@ -170,11 +174,22 @@ O.~Crawford, B.~van Straaten, D.~Wang, T.~Parks, E.~Campbell, and S.~Brierley,
   ``Efficient quantum measurement of pauli operators in the presence of finite
   sampling error,'' \emph{Quantum}, vol.~5, p. 385, 2021.
 
+\bibitem{Gokhale2020}
+P.~Gokhale, O.~Angiuli, Y.~Ding, K.~Gui, T.~Tomesh, M.~Suchara, M.~Martonosi,
+  and F.~T. Chong, ``{$O(N^3)$} measurement cost for variational quantum
+  eigensolver on molecular hamiltonians,'' \emph{IEEE Transactions on Quantum
+  Engineering}, vol.~1, pp. 1--24, 2020.
+
 \bibitem{PleschBrukner2011}
 M.~Plesch and {\v{C}}.~Brukner, ``Quantum-state preparation with universal gate
   decompositions,'' \emph{Physical Review A}, vol.~83, no.~3, p. 032302, 2011.
 
-\bibitem{Endo2023}
+\bibitem{Huang2020}
+H.-Y. Huang, R.~Kueng, and J.~Preskill, ``Predicting many properties of a
+  quantum system from very few measurements,'' \emph{Nature Physics}, vol.~16,
+  no.~10, pp. 1050--1057, 2020.
+
+\bibitem{Endo2021}
 S.~Endo, Z.~Cai, S.~C. Benjamin, and X.~Yuan, ``Hybrid quantum-classical
   algorithms and quantum error mitigation,'' \emph{Journal of the Physical
   Society of Japan}, vol.~90, no.~3, p. 032001, 2021.

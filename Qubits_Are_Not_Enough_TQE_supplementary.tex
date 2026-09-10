@@ -1,0 +1,142 @@
+% Supplementary material for
+%   "Qubits Are Not Enough: Deflation and Measurement Limits in Variational
+%    Quantum Modal Analysis"
+% Built independently of the main manuscript:  pdflatex <thisfile>
+% Contains the three procedures that are developed but deliberately not claimed,
+% because none is evaluated experimentally. They are hosted here rather than in the
+% article so that the article carries only evaluated material.
+\documentclass[journal]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools,bm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs,multirow,array}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage{microtype}
+\usepackage{url}
+
+\graphicspath{{figures/}}
+\newdimen\xfigwd
+\xfigwd=\columnwidth
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand{\M}{\mathbf{M}}
+\newcommand{\K}{\mathbf{K}}
+\newcommand{\C}{\mathbf{C}}
+\newcommand{\A}{\mathbf{A}}
+\newcommand{\Hq}{\mathbf{H}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\PhiM}{\boldsymbol{\Phi}}
+\newcommand{\ph}{\boldsymbol{\phi}}
+\newcommand{\yy}{\mathbf{y}}
+\newcommand{\uu}{\mathbf{u}}
+\newcommand{\ff}{\mathbf{f}}
+\newcommand{\rr}{\mathbf{r}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\MAC}{\operatorname{MAC}}
+\newcommand{\epoch}{\mathrm{ep}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+
+\ifdefined\TQE
+  % IEEEtran spells these two differently; nothing in the body changes.
+  \newcommand{\PARstart}{\IEEEPARstart}
+  \newenvironment{keywords}{\begin{IEEEkeywords}}{\end{IEEEkeywords}}
+\fi
+
+\crefname{figure}{Fig.}{Figs.}
+\Crefname{figure}{Fig.}{Figs.}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{remark}{Remark}{Remarks}
+\Crefname{remark}{Remark}{Remarks}
+\crefname{proposition}{Proposition}{Propositions}
+\Crefname{proposition}{Proposition}{Propositions}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
+
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\theequation}{S\arabic{equation}}
+\begin{document}
+
+\title{Supplementary Material: Qubits Are Not Enough --- Deflation and Measurement
+Limits in Variational Quantum Modal Analysis}
+\maketitle
+
+\noindent This supplement contains three procedures referenced from the main article.
+Each is developed and analyzed but \emph{not} evaluated experimentally, which is why it
+is placed here rather than among the article's results. Equation and section numbers are
+prefixed with \textsf{S}; all references to the main article are by name.
+
+\section{Lexicographic variance refinement}
+\label{app:lexico}
+Adding $\gamma\sigma_H^2+\zeta\ell_p$ to the energy requires a conversion between quantities with no common
+scale. The alternative used here states the trade-off as constraints at declared tolerances:
+\begin{equation}
+\begin{aligned}
+&\min_{\theta}\ \sigma_H^2(\theta)\\
+&\text{s.t. }C_r(\theta)\le C_r^\star+\epsilon_E,\qquad
+\ell_p(\theta)\le\epsilon_p,\\
+&\hspace{2.0em}\max_{j<r}|\langle\widehat u_j|\psi(\theta)\rangle|^2\le\epsilon_O.
+\end{aligned}
+\label{eq:lexico}
+\end{equation}
+The energy ordering is preserved within $\epsilon_E$ rather than traded against variance at an
+application-defined rate. This refinement is not exercised in any experiment reported here.
+
+\section{Exact relation between projector error and state angle}
+For normalized vectors $u$ and $\widehat u$, the rank-one projector difference satisfies
+\begin{equation}
+\norm{\widehat u\widehat u^T-uu^T}_2=\sin\angle(\widehat u,u).
+\label{eq:projectorangle}
+\end{equation}
+Therefore the deflation perturbation may be written as
+\begin{equation}
+\norm{\Delta_r}_2\le
+\sum_{j<r}\beta_j\sin\angle(\widehat u_j,u_j),
+\label{eq:anglepert}
+\end{equation}
+which gives a direct rule for balancing penalty margin against the quality of previously extracted modes.
+
+
+\section{Post-hoc temporal mode tracking}
+\label{app:tracking}
+Every monitoring epoch is solved independently using the same independently defined objective. A previous solution may initialize the circuit, but it does not enter the objective. After solution, define for candidate pair $(i,j)$
+\begin{equation}
+\mathbf z_{ij,t}=
+\begin{bmatrix}
+\log(f_{j,t}/f_{i,t-1})\\
+1-\MAC_{ij,t}^{(M)}
+\end{bmatrix},
+\qquad
+c_{ij,t}=\mathbf z_{ij,t}^T\boldsymbol\Sigma_{i,0}^{-1}\mathbf z_{ij,t},
+\label{eq:trackingcost}
+\end{equation}
+where $\boldsymbol\Sigma_{i,0}$ is estimated from healthy baseline variability. MAC-based comparison of identified modes is standard in operational modal analysis \cite{Reynders2012}; the assignment formulation used here is stated as this paper's own construction rather than as established practice, and what is adapted is the uncertainty normalization and the insistence that pairing occur strictly after an independent eigensolve. Mode labels are assigned by
+\begin{equation}
+\pi_t^*=\argmin_{\pi}\sum_i c_{i,\pi(i),t}.
+\label{eq:hungarian}
+\end{equation}
+A change alarm is based on $c_{i,\pi(i),t}$ exceeding a baseline quantile. A $\chi^2$ calibration is not appropriate here: $1-\MAC$ is non-negative and concentrates at zero, so the quadratic form is not $\chi^2_2$ distributed and the empirical quantile should be used instead. Because pairing occurs after independent eigensolution, the objective cannot pull a damaged mode toward its healthy predecessor. This is weaker than unbiasedness of the alarm: the assignment itself can still mislabel under damage-induced mode veering, after which the change statistic is referenced to the wrong baseline mode, and modes that go unidentified in an epoch---routine in operational modal analysis---need an explicit missing-label rule that \cref{eq:hungarian} does not provide. A further practical restriction is that $\MAC^{(M)}$ requires $\M$ at every degree of freedom, whereas output-only identification returns shapes only at instrumented coordinates; a sensor-space unweighted MAC must be substituted there, at the cost of the mass-orthogonality interpretation. Near degeneracy, the same procedure is applied to principal angles between subspaces.
+
+This rule is not exercised in any experiment reported here.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
