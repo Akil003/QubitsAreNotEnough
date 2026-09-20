@@ -15,8 +15,8 @@ __pycache__/
 
 # Alternate-class build, produced on demand by `make manuscript-tqe`.
 # See the Compile section of README.md.
-Qubits_Are_Not_Enough_TQE_IEEEtran.pdf
-Qubits_Are_Not_Enough_TQE_IEEEtran.bbl
+Qubits_Are_Not_Enough_TQE_IEEEAccess.pdf
+Qubits_Are_Not_Enough_TQE_IEEEAccess.bbl
 
 # Intermediate figure directories. The study scripts write here and then copy the
 # results into figures/, which is what the manuscript reads and what is manifested.

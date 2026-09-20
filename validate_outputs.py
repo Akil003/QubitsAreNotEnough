@@ -122,6 +122,19 @@ def validate_numbers() -> None:
     summary = json.loads((ROOT / "minor_revision_data" / "minor_revision_summary.json").read_text())
     close(float(summary["qwc_floor_mode1_at_100k_pct"]), 0.8287785573, rtol=1e-9)
 
+    # C5: values quoted in the depth and gradient discussions that previously had a
+    # generator but no assertion binding the printed rounding to it.
+    larger = pd.read_csv(ROOT / "revision_data" / "larger_vqe_benchmarks.csv")
+    d16 = larger[(larger.dof == 16) & (larger.depth == 2)].iloc[0]
+    close(float(d16.frequency_error_pct), 5.158516466260321, rtol=1e-9)   # quoted as 5.16%
+    d16d1 = larger[(larger.dof == 16) & (larger.depth == 1)].iloc[0]
+    close(float(d16d1.frequency_error_pct), 81.75148313017819, rtol=1e-9)  # quoted as 81.75%
+    grad = pd.read_csv(ROOT / "revision_data" / "gradient_trainability.csv")
+    g12 = grad[(grad.qubits == 12) & (grad.initialization == "uniform")].iloc[0]
+    close(float(g12.gradient_variance), 0.000981969195681257, rtol=1e-9)   # quoted as 9.82e-4
+    g2 = grad[(grad.qubits == 2) & (grad.initialization == "uniform")].iloc[0]
+    close(float(g2.gradient_variance), 2.62e-2, rtol=5e-3)                 # quoted as 2.62e-2
+
     # Restart study (Sec. VII-D). Deterministic per seed, so these are tight. Depth 1
     # is bimodal between two ansatz-limited attractors; depth 2 reaches machine noise.
     restarts = pd.read_csv(ROOT / "revision_data" / "optimizer_restarts.csv")
@@ -540,6 +553,9 @@ def validate_regeneration(full: bool = False) -> None:
             if full:
                 rs.trainability_depth_sweep()          # own generator, ~35 s
                 diff("trainability_depth_sweep.csv", rev, ROOT / "revision_data")
+                # C2: the bootstrap CI artefact is itself regeneration-checked, not merely
+                # spot-asserted through the quoted bounds in validate_numbers().
+                diff("trainability_depth_sweep_ci.csv", rev, ROOT / "revision_data")
                 # Fixed order: finite_shot_frequency is main()'s first consumer of the
                 # shared generator and damage_shot_study its second.
                 rs.RNG = _np.random.default_rng(20260623)

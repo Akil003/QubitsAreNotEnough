@@ -33,25 +33,27 @@ file**. The body is shared verbatim; only the front matter branches (class selec
 `\PARstart`/`keywords` naming, the author block, and where `\maketitle` sits).
 
 ```bash
-make manuscript        # IEEE Access layout  -> Qubits_Are_Not_Enough_TQE.pdf
-make manuscript-tqe    # IEEE TQE layout     -> Qubits_Are_Not_Enough_TQE_IEEEtran.pdf
+make manuscript          # IEEE TQE layout (canonical) -> Qubits_Are_Not_Enough_TQE.pdf
+make supplementary       # supplement                  -> ..._supplementary.pdf
+make manuscript-access   # IEEE Access layout (dev only, not submitted)
 ```
 
 Equivalently, by hand:
 
 ```bash
-pdflatex Qubits_Are_Not_Enough_TQE.tex                                  # Access
-pdflatex "\def\TQE{}\input{Qubits_Are_Not_Enough_TQE}"                   # TQE
+pdflatex Qubits_Are_Not_Enough_TQE.tex                                      # TQE (canonical)
+pdflatex "\def\ACCESS{}\input{Qubits_Are_Not_Enough_TQE}"                   # Access (dev only)
 ```
 
 In an editor that cannot pass command-line arguments (Overleaf, TeXShop, TeXstudio),
-uncomment the `% \def\TQE{}` line at the top of the `.tex` instead.
+uncomment the `% \def\ACCESS{}` line at the top of the `.tex` to get the Access layout.
 
-`Qubits_Are_Not_Enough_TQE.pdf` (the Access build) is the version listed in
-`MANIFEST.sha256`. The IEEEtran build is produced on demand and is not manifested.
-**Confirm which template the destination journal requires before submitting** --
-IEEE Access and IEEE Transactions on Quantum Engineering are different journals with
-different classes, and TQE supplies its own IEEEtran-based template.
+**`Qubits_Are_Not_Enough_TQE.pdf` is the IEEEtran/TQE build and is the exact PDF
+submitted to IEEE Transactions on Quantum Engineering.** It is the artefact listed in
+`MANIFEST.sha256` and reported by `PDF_PREFLIGHT.txt`. The IEEE Access layout is
+retained only as a development convenience: it writes to a separate filename, is
+gitignored, is not manifested or preflighted, and is not part of the submission
+archive.
 
 ## Reproduce numerical outputs
 

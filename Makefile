@@ -3,28 +3,28 @@ PDFLATEX ?= pdflatex
 BIBTEX ?= bibtex
 MAIN = Qubits_Are_Not_Enough_TQE
 
-.PHONY: all manuscript manuscript-tqe supplementary study validate clean
+.PHONY: all manuscript manuscript-access supplementary study validate clean
 
 all: manuscript
 
-# Default target: IEEE Access layout, producing $(MAIN).pdf -- the PDF shipped in
-# MANIFEST.sha256. Switch the default here once the destination journal's template
-# is confirmed; the source needs no other change.
+# CANONICAL target: IEEE TQE layout (IEEEtran.cls), producing $(MAIN).pdf -- the exact
+# PDF submitted to TQE, and the artefact recorded in MANIFEST.sha256 and PDF_PREFLIGHT.txt.
 manuscript:
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(MAIN).tex
 	$(BIBTEX) $(MAIN)
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(MAIN).tex
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(MAIN).tex
 
-# IEEE TQE layout (IEEEtran.cls) from the same source, written to a separate file so
-# the two never overwrite each other. Not in the manifest; build on demand.
-TQEOUT = $(MAIN)_IEEEtran
-SUPP   = $(MAIN)_supplementary
-manuscript-tqe:
-	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(TQEOUT) "\def\TQE{}\input{$(MAIN)}"
-	$(BIBTEX) $(TQEOUT)
-	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(TQEOUT) "\def\TQE{}\input{$(MAIN)}"
-	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(TQEOUT) "\def\TQE{}\input{$(MAIN)}"
+# IEEE Access layout from the same source, written to a separate file so the two never
+# overwrite each other. DEVELOPMENT CONVENIENCE ONLY: not manifested, not preflighted,
+# and not part of the submission archive.
+ACCESSOUT = $(MAIN)_IEEEAccess
+SUPP      = $(MAIN)_supplementary
+manuscript-access:
+	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(ACCESSOUT) "\def\ACCESS{}\input{$(MAIN)}"
+	$(BIBTEX) $(ACCESSOUT)
+	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(ACCESSOUT) "\def\ACCESS{}\input{$(MAIN)}"
+	$(PDFLATEX) -interaction=nonstopmode -halt-on-error -jobname=$(ACCESSOUT) "\def\ACCESS{}\input{$(MAIN)}"
 
 supplementary:
 	$(PDFLATEX) -interaction=nonstopmode -halt-on-error $(SUPP).tex

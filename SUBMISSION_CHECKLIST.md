@@ -1,7 +1,8 @@
 # Final TQE Submission Checklist
 
 - [ ] Add your official ETH email to `\corresp{...}` if it should appear in the PDF.
-- [ ] Confirm the author name, affiliation, and sole-authorship status.
+- [ ] Confirm final author names, order, affiliations, corresponding author, and each
+      author's approval of the submitted version.
 - [ ] Confirm that every derivation, numerical result, and citation has been personally checked.
 - [ ] Upload the manuscript PDF and source archive through the TQE submission portal.
 - [ ] Select article type: Regular Article.

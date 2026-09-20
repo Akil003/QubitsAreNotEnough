@@ -92,9 +92,27 @@ L.~Taliadouros, I.~G. Mavromatis, and I.~A. Kougioumtzoglou, ``Eigenvalue
   analysis of stochastic structural systems: A quantum computing approach,''
   \emph{Probabilistic Engineering Mechanics}, vol.~81, p. 103814, 2025.
 
-\bibitem{LeeKanno2023}
+\bibitem{LeeKanno2025}
 Y.~Lee and K.~Kanno, ``Modal analysis on quantum computers via qubitization,''
-  arXiv:2307.07478 [quant-ph], 2023.
+  in \emph{2025 IEEE International Conference on Quantum Computing and
+  Engineering (QCE)}, 2025, pp. 2170--2180.
+
+\bibitem{Xu2026}
+Y.~Xu, K.~Zhao, H.-T. Liu, K.~Huang, Z.~Liu, H.~Fan, and H.~Hu, ``{H}amiltonian
+  simulation of elastodynamics on a quantum computer via energy conservation
+  mapping,'' \emph{Journal of the Mechanics and Physics of Solids}, vol. 213,
+  p. 106639, 2026.
+
+\bibitem{Wagatsuma2026}
+K.~Wagatsuma, K.~Endo, and K.~Terada, ``Simple harmonic motion analysis of
+  elastic structures using {H}amiltonian simulation via quantum singular value
+  transformation,'' \emph{International Journal for Numerical Methods in
+  Engineering}, vol. 127, no.~16, p. e70407, 2026.
+
+\bibitem{XuHu2026}
+Y.~Xu and H.~Hu, ``Potential energy minimization for structural analysis via
+  decomposition-free quantum computing,'' \emph{Computers \& Structures}, vol.
+  330, p. 108309, 2026.
 
 \bibitem{GeorgeNg1988}
 A.~George and E.~Ng, ``On the complexity of sparse {QR} and {LU} factorization

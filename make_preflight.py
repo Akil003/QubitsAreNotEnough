@@ -15,7 +15,9 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-TARGETS = ("Qubits_Are_Not_Enough_TQE.pdf", "Qubits_Are_Not_Enough_TQE_IEEEtran.pdf")
+# The two artefacts actually submitted. The IEEE Access build is a development
+# convenience (see the Makefile) and is deliberately not preflighted.
+TARGETS = ("Qubits_Are_Not_Enough_TQE.pdf", "Qubits_Are_Not_Enough_TQE_supplementary.pdf")
 
 
 def _pdffonts(pdf: Path) -> tuple[int, int, int]:
