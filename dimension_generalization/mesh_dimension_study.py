@@ -25,8 +25,9 @@ Design choices:
         symmetry degeneracies inflating or deflating the sparsity count.
       * square_uniform_MK: pins only the (0,0) corner (a single Dirichlet
         constraint that preserves the i<->j reflection symmetry of a square
-        grid) with UNIFORM properties, deliberately chosen to produce
-        genuine degenerate mode pairs. Used only for the degeneracy demo.
+        grid) with UNIFORM properties. This family has exact algebraic repeated
+        eigenvalues; the surviving reflection symmetry alone does not force
+        their multiplicity. Used only for the degeneracy demo.
 
 Written in a separate subdirectory to keep the project root uncluttered.
 """
@@ -146,8 +147,9 @@ def square_uniform_MK(n_side: int, mass_type: str = "consistent",
                       probe: tuple[int, float] | None = None
                       ) -> tuple[np.ndarray, np.ndarray]:
     """Uniform square grid, free everywhere except a single pinned corner
-    (0,0). Preserves the i<->j reflection symmetry needed for genuine
-    degenerate mode pairs; used only for the degeneracy demonstration.
+    (0,0). The construction preserves i<->j reflection symmetry and also has
+    exact algebraic repeated eigenvalues; the reflection symmetry alone does
+    not enforce their multiplicity. Used only for the degeneracy demonstration.
     """
     M_full, K_full = _assemble_grid_KM((n_side, n_side), mass_type, heterogeneous=False,
                                        axis_scale=axis_scale, probe=probe)
@@ -286,15 +288,15 @@ def _bandwidth(A: np.ndarray) -> int:
 
 
 def ordering_study() -> pd.DataFrame:
-    """Does a fill-reducing ordering help or hurt the measurement cost?
+    """How does a standard sparse-matrix reordering affect measurement cost?
 
-    Classical sparse practice applies a fill-reducing permutation before factorizing.
-    This asks what that same step does to the Pauli representation. Three symmetric
+    Classical sparse practice often applies graph reorderings before factorization.
+    This asks what the same permutation does to the Pauli representation. Three symmetric
     permutations of the structural graph of K are compared at fixed N, fixed spatial
     dimension and fixed physics (a symmetric permutation changes no eigenvalue):
 
       natural  -- the locality-preserving row-major indexing used everywhere else;
-      rcm      -- reverse Cuthill-McKee, the fill-reducing ordering;
+      rcm      -- reverse Cuthill-McKee, a bandwidth/profile-reducing ordering;
       random   -- a fixed-seed scramble, included as the worst-case bracket.
 
     Reported per ordering: the Cholesky fill nnz(L) of M, the density of the whitened

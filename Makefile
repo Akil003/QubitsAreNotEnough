@@ -45,4 +45,4 @@ validate:
 # not removed here; regenerate it with `make manuscript` if you delete it by hand.
 clean:
 	rm -f $(MAIN).aux $(MAIN).blg $(MAIN).log $(MAIN).out
-	rm -f $(TQEOUT).aux $(TQEOUT).bbl $(TQEOUT).blg $(TQEOUT).log $(TQEOUT).out
+	rm -f $(ACCESSOUT).aux $(ACCESSOUT).bbl $(ACCESSOUT).blg $(ACCESSOUT).log $(ACCESSOUT).out

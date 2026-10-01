@@ -1,8 +1,9 @@
 # TQE Submission-Ready Package
 
 This package contains the manuscript, its reproduction code, and the generated data.
-The source builds against two journal classes -- see **Compile** below -- and the
-destination template should be confirmed before submission.
+The canonical submission target is IEEE Transactions on Quantum Engineering using
+`IEEEtran.cls`; the IEEE Access build is retained only as a development convenience.
+See **Compile** and **Final submission bundle** below.
 
 ## Main files
 
@@ -54,6 +55,28 @@ submitted to IEEE Transactions on Quantum Engineering.** It is the artefact list
 retained only as a development convenience: it writes to a separate filename, is
 gitignored, is not manifested or preflighted, and is not part of the submission
 archive.
+
+## Final submission bundle
+
+Do **not** upload the repository wholesale. It intentionally retains IEEE Access development
+assets, working notes, and reproducibility material that are not part of the TQE source upload.
+
+After the final source edit, run:
+
+```bash
+python make_submission_archive.py
+```
+
+That command runs the full numerical validation suite, rebuilds the canonical IEEEtran
+manuscript and supplement, regenerates `PDF_PREFLIGHT.txt`, refreshes and verifies
+`MANIFEST.sha256`, enforces the zero-Type-3/fully-embedded-font gate, and writes
+`tqe_submission_bundle.zip`.
+
+The ZIP contains only the TQE manuscript/supplement PDFs and sources, `IEEEtran.cls`,
+bibliography/BBL files, and the figure PDFs actually referenced by the manuscript. It
+deliberately excludes `ieeeaccess.cls`, Access logos/artwork, working notes, code/data,
+and the alternate Access build. Reproducibility code/data can be uploaded separately or
+linked from the repository according to the portal options.
 
 ## Reproduce numerical outputs
 

@@ -13,7 +13,7 @@ __pycache__/
 *.log
 *.out
 
-# Alternate-class build, produced on demand by `make manuscript-tqe`.
+# Alternate-class build, produced on demand by `make manuscript-access`.
 # See the Compile section of README.md.
 Qubits_Are_Not_Enough_TQE_IEEEAccess.pdf
 Qubits_Are_Not_Enough_TQE_IEEEAccess.bbl
@@ -22,3 +22,6 @@ Qubits_Are_Not_Enough_TQE_IEEEAccess.bbl
 # results into figures/, which is what the manuscript reads and what is manifested.
 revision_figures/
 dimension_generalization/figures/
+
+# Final clean upload bundle produced by make_submission_archive.py.
+tqe_submission_bundle.zip

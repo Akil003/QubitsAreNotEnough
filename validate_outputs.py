@@ -78,6 +78,14 @@ def validate_numbers() -> None:
     assert (gq_l.loc[grouped, "qwc_KM"] == gq_l.loc[grouped, "qwc_A"]).all()
     assert (gq_c.loc[[8, 16, 32, 64], "qwc_KM"] < gq_c.loc[[8, 16, 32, 64], "qwc_A"]).all()
 
+    # Sec. VI-C: bind the newly quoted asymptotic representation comparison to
+    # the committed data. For consistent mass over N>=16, the unwhitened K+M
+    # Pauli count fits N^1.0523 (quoted as 1.05).
+    fit_ns = np.asarray([16, 32, 64, 128], dtype=float)
+    fit_km = gq_c.loc[[16, 32, 64, 128], "pauli_KM"].to_numpy(dtype=float)
+    slope_km = float(np.polyfit(np.log(fit_ns), np.log(fit_km), 1)[0])
+    close(slope_km, 1.0523116612904075, rtol=5e-4)
+
     # G8: every reported localization proportion carries a Wilson interval, and each
     # interval quoted in the text must match the persisted one.
     rev_sum = json.loads((ROOT / "revision_data" / "revision_summary.json").read_text())
@@ -393,6 +401,20 @@ def validate_near_degenerate() -> None:
     assert 0.0021 <= df.eps_sub.min() and df.eps_sub.max() <= 0.0043
     assert (df.g_pair > 0.11).all()
 
+    # Sec. VIII-C: bind the algebraic repeated-eigenvalue statement to the generator.
+    sys.path.insert(0, str(ROOT / "dimension_generalization"))
+    import mesh_dimension_study as mds
+    from scipy.linalg import eigh
+    for n_side in range(3, 8):
+        M_sq, K_sq = mds.square_uniform_MK(n_side, "consistent")
+        lam_sq = eigh(K_sq, M_sq, eigvals_only=True)
+        repeated = np.isclose(lam_sq, 6.6e4, rtol=1e-10, atol=1e-6)
+        if int(repeated.sum()) != n_side - 1:
+            raise AssertionError(
+                f"n_side={n_side}: expected multiplicity {n_side - 1} at 6.6e4, "
+                f"got {int(repeated.sum())}"
+            )
+
 
 def validate_complexity() -> None:
     """Tie the manuscript complexity table (tab:complexity) and the illustrative
@@ -406,6 +428,19 @@ def validate_complexity() -> None:
     sys.path.insert(0, str(ROOT))
     import revision_study as rs  # safe: only path setup + RNG seed run on import
     from scipy.linalg import eigh
+
+    # Sec. VI-C: M is SPD and the normalized denominator is bounded below by 1/kappa(M).
+    # Bind the quoted maxima through N=128 directly to the chain generator.
+    for mass_type, expected_max in (("lumped", 2.498031496062992),
+                                    ("consistent", 4.913974850464633)):
+        kappas = []
+        for nn in (4, 8, 16, 32, 64, 128):
+            M_nn, _, _ = rs.chain_model(nn, mass_type)
+            mu = eigh(M_nn, eigvals_only=True)
+            if float(mu[0]) <= 0.0:
+                raise AssertionError(f"{mass_type} M is not positive definite at N={nn}")
+            kappas.append(float(mu[-1] / mu[0]))
+        close(max(kappas), expected_max, rtol=1e-10)
 
     def whiten(n: int, mass_type: str) -> np.ndarray:
         M, K, _ = rs.chain_model(n, mass_type)

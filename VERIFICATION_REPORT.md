@@ -11,7 +11,7 @@ The source manuscript was taken from `Qubits_Are_Not_Enough_Minor_Revision_Final
 
 ## Journal conversion
 
-- Converted to the user-supplied IEEE Transactions on Quantum Engineering `ieeeaccess` LaTeX template.
+- The original package used an IEEE Access-style development template; the canonical TQE submission now builds directly with `IEEEtran.cls`, while the Access target is retained only for development.
 - Article type prepared: Regular Article.
 - Final title: **Qubits Are Not Enough: Deflation and Measurement Limits in Variational Quantum Modal Analysis**.
 - Authors: Bikalpa Gautam (ETH Zurich), Akil Raj Subedi (Zynga Inc.); corresponding author Bikalpa Gautam, `bgautam@ethz.ch`.
@@ -46,7 +46,11 @@ Monte Carlo quantities.
 - Wide measurement and shot-requirement tables were converted to full-width IEEE floats to prevent overlap.
 - The original template’s hard-coded 2016 footer and appendix punctuation defect were corrected locally in `ieeeaccess.cls`.
 - No undefined citations or references remain.
+- **Final-source gate:** the source-only cleanup applied after this PDF verification
+  requires a fresh build and visual reinspection. `PDF_PREFLIGHT.txt` is deliberately
+  marked stale until `python make_submission_archive.py` rebuilds both PDFs and
+  regenerates the preflight record.
 
 ## Remaining author-controlled item
 
-The corresponding-author address `bgautam@ethz.ch` is now printed on the `\corresp{...}` line. Confirm it is the address you want to appear before final upload.
+The corresponding-author address `bgautam@ethz.ch` is now printed in the author metadata. Confirm it is the address you want to appear before final upload, then run `python make_submission_archive.py` and visually inspect the freshly rebuilt PDF before uploading it.
